@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Production builds
+dist/
+build/
+
+# Local databases & logs
+backend/data/
+backend/logs/
+backend/uploads/
+data/
+logs/
+uploads/
+*.db
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE / System files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
