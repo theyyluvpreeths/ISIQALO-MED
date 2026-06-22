@@ -1,0 +1,59 @@
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-06-22 19:12:19"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-06-22 19:13:08"}
+{"level":"info","message":"Connected to SQLite database at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\data\\isiqalo.db","timestamp":"2026-06-22 19:13:08"}
+{"level":"info","message":"Database tables initialized successfully","timestamp":"2026-06-22 19:13:08"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-06-22 19:13:30"}
+{"level":"info","message":"Connected to SQLite database at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\data\\isiqalo.db","timestamp":"2026-06-22 19:13:30"}
+{"level":"info","message":"Database tables initialized successfully","timestamp":"2026-06-22 19:13:30"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-06-22 19:15:14"}
+{"level":"info","message":"Serving static files from C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\frontend\\dist","timestamp":"2026-06-22 19:15:14"}
+{"level":"info","message":"Server successfully running on port 5000","timestamp":"2026-06-22 19:15:14"}
+{"level":"info","message":"Connected to SQLite database at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\data\\isiqalo.db","timestamp":"2026-06-22 19:15:14"}
+{"level":"info","message":"Database tables initialized successfully","timestamp":"2026-06-22 19:15:14"}
+{"level":"info","message":"POST /api/auth/register - IP: ::1","timestamp":"2026-06-22 19:19:44"}
+{"level":"info","message":{"action":"SIGNUP_SUCCESS","details":"User registered: dr.madiba@clinic.co.za","event":"SECURITY_AUDIT","ipAddress":"::1","timestamp":"2026-06-22T17:19:44.627Z","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36","userId":"b4d8b833-e68f-4f87-b569-43d2478490f6"},"timestamp":"2026-06-22 19:19:44"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:19:44"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:19:44"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:19:44"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:19:44"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:24:14"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:24:14"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:24:14"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:24:14"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-22 19:24:43"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-22 19:24:43"}
+{"level":"info","message":"POST /api/extract - IP: ::1","timestamp":"2026-06-22 19:24:55"}
+{"level":"info","message":{"action":"DATA_EXTRACTION","details":"Extracted 1 records in JSON format.","event":"SECURITY_AUDIT","ipAddress":"::1","timestamp":"2026-06-22T17:24:55.162Z","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36","userId":"b4d8b833-e68f-4f87-b569-43d2478490f6"},"timestamp":"2026-06-22 19:24:55"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-22 19:25:06"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-22 19:25:06"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-22 19:25:29"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-22 19:25:29"}
+{"level":"info","message":"GET /api/settings/audit-logs - IP: ::1","timestamp":"2026-06-22 19:25:41"}
+{"level":"info","message":"GET /api/settings/audit-logs - IP: ::1","timestamp":"2026-06-22 19:25:49"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-22 19:25:52"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-22 19:25:53"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:25:57"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:25:57"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:25:57"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:25:57"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:38:48"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:38:48"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:38:48"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:38:48"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-22 19:39:28"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-22 19:39:28"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:39:31"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:39:31"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:39:31"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:39:31"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-22 19:39:42"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-22 19:39:42"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:39:46"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:39:46"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:39:46"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:39:46"}
+{"level":"info","message":"GET /api/settings/audit-logs - IP: ::1","timestamp":"2026-06-22 19:47:04"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:47:09"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-22 19:47:09"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:47:09"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-22 19:47:09"}

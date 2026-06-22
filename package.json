@@ -1,0 +1,19 @@
+{
+  "name": "isiqalo-med",
+  "version": "1.0.0",
+  "description": "Isiqalo Med - Secure Medical Case Registry and Extraction System",
+  "private": true,
+  "scripts": {
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cmd /c \"cd backend && npm install\"",
+    "install:frontend": "cmd /c \"cd frontend && npm install\"",
+    "dev:backend": "cmd /c \"cd backend && npm run dev\"",
+    "dev:frontend": "cmd /c \"cd frontend && npm run dev\"",
+    "dev": "npx concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build:frontend": "cmd /c \"cd frontend && npm run build\"",
+    "start:backend": "cmd /c \"cd backend && npm start\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
