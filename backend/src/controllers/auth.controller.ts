@@ -6,7 +6,7 @@ import { UserRepository, AuditLogRepository, UserEntity } from '../repositories/
 import { logSecurityEvent } from '../config/logger';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'isiqalo-med-jwt-secret-key-for-local-dev';
-const JWT_EXPIRES_IN = '24h';
+const JWT_EXPIRES_IN = '1h';
 
 export class AuthController {
   static async register(req: Request, res: Response): Promise<void> {
@@ -18,6 +18,15 @@ export class AuthController {
 
       const ip = req.ip || 'unknown';
       const userAgent = req.headers['user-agent'] || 'unknown';
+
+      // Password strength validation
+      const passwordStrengthRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,}$/;
+      if (!passwordStrengthRegex.test(password)) {
+        res.status(400).json({
+          error: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character.'
+        });
+        return;
+      }
 
       // Check if user already exists
       const existingUser = await UserRepository.getUserByEmail(email);

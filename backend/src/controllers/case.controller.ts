@@ -13,7 +13,12 @@ export class CaseController {
         return;
       }
 
-      const { title, category, institution, summary, tags, consentObtained } = req.body;
+      const {
+        title, category, institution, summary, tags, consentObtained,
+        patientFirstName, patientLastName, patientIdNumber,
+        patientDob, patientGender, patientContact,
+        patientMedicalAid, patientMedicalAidNumber
+      } = req.body;
       const file = req.file; // Handle files optionally
 
       const ip = req.ip || 'unknown';
@@ -23,6 +28,13 @@ export class CaseController {
 
       // Encrypt the sensitive abstract/summary
       const summaryEncrypted = encrypt(summary);
+
+      // Encrypt patient PII fields
+      const patientFirstNameEncrypted = patientFirstName ? encrypt(patientFirstName) : null;
+      const patientLastNameEncrypted = patientLastName ? encrypt(patientLastName) : null;
+      const patientIdNumberEncrypted = patientIdNumber ? encrypt(patientIdNumber) : null;
+      const patientContactEncrypted = patientContact ? encrypt(patientContact) : null;
+      const patientMedicalAidNumberEncrypted = patientMedicalAidNumber ? encrypt(patientMedicalAidNumber) : null;
 
       // Handle file metadata encryption if present
       let fileName = null;
@@ -43,6 +55,14 @@ export class CaseController {
         summary_encrypted: summaryEncrypted,
         tags,
         consent_obtained: consentObtained ? 1 : 0,
+        patient_first_name_encrypted: patientFirstNameEncrypted,
+        patient_last_name_encrypted: patientLastNameEncrypted,
+        patient_id_number_encrypted: patientIdNumberEncrypted,
+        patient_dob: patientDob || null,
+        patient_gender: patientGender || null,
+        patient_contact_encrypted: patientContactEncrypted,
+        patient_medical_aid: patientMedicalAid || null,
+        patient_medical_aid_number_encrypted: patientMedicalAidNumberEncrypted,
         file_name: fileName,
         file_size: fileSize,
         file_path_encrypted: filePathEncrypted,
@@ -76,6 +96,44 @@ export class CaseController {
     }
   }
 
+  /** Helper to safely decrypt a field, returning null on failure */
+  private static safeDecrypt(encrypted: string | null): string | null {
+    if (!encrypted) return null;
+    try {
+      return decrypt(encrypted);
+    } catch {
+      return '[DECRYPTION_ERROR]';
+    }
+  }
+
+  /** Map a raw CaseEntity row to the decrypted API response shape */
+  private static mapCaseToResponse(c: CaseEntity) {
+    return {
+      id: c.id,
+      title: c.title,
+      category: c.category,
+      institution: c.institution,
+      summary: CaseController.safeDecrypt(c.summary_encrypted) || '[CORRUPTED DATA]',
+      tags: c.tags,
+      consentObtained: c.consent_obtained === 1,
+      patientFirstName: CaseController.safeDecrypt(c.patient_first_name_encrypted),
+      patientLastName: CaseController.safeDecrypt(c.patient_last_name_encrypted),
+      patientIdNumber: CaseController.safeDecrypt(c.patient_id_number_encrypted),
+      patientDob: c.patient_dob,
+      patientGender: c.patient_gender,
+      patientContact: CaseController.safeDecrypt(c.patient_contact_encrypted),
+      patientMedicalAid: c.patient_medical_aid,
+      patientMedicalAidNumber: CaseController.safeDecrypt(c.patient_medical_aid_number_encrypted),
+      fileName: c.file_name,
+      fileSize: c.file_size,
+      uploadedByUserId: c.uploaded_by_user_id,
+      viewsCount: c.views_count,
+      downloadsCount: c.downloads_count,
+      likesCount: c.likes_count,
+      createdAt: c.created_at
+    };
+  }
+
   static async getCases(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { search, category, sort } = req.query;
@@ -86,45 +144,8 @@ export class CaseController {
         sort: sort as string
       });
 
-      // Decrypt summaries for return (Zero-Trust authorization layer validates token via authenticateJWT)
-      const decryptedCases = cases.map(c => {
-        try {
-          return {
-            id: c.id,
-            title: c.title,
-            category: c.category,
-            institution: c.institution,
-            summary: decrypt(c.summary_encrypted),
-            tags: c.tags,
-            consentObtained: c.consent_obtained === 1,
-            fileName: c.file_name,
-            fileSize: c.file_size,
-            uploadedByUserId: c.uploaded_by_user_id,
-            viewsCount: c.views_count,
-            downloadsCount: c.downloads_count,
-            likesCount: c.likes_count,
-            createdAt: c.created_at
-          };
-        } catch (decryptErr) {
-          console.error(`Failed to decrypt case ${c.id}:`, decryptErr);
-          return {
-            id: c.id,
-            title: c.title,
-            category: c.category,
-            institution: c.institution,
-            summary: '[CORRUPTED DATA/DECRYPTION ERROR]',
-            tags: c.tags,
-            consentObtained: c.consent_obtained === 1,
-            fileName: c.file_name,
-            fileSize: c.file_size,
-            uploadedByUserId: c.uploaded_by_user_id,
-            viewsCount: c.views_count,
-            downloadsCount: c.downloads_count,
-            likesCount: c.likes_count,
-            createdAt: c.created_at
-          };
-        }
-      });
+      // Decrypt summaries and patient PII for return
+      const decryptedCases = cases.map(c => CaseController.mapCaseToResponse(c));
 
       res.status(200).json(decryptedCases);
     } catch (error) {
@@ -147,20 +168,8 @@ export class CaseController {
       await CaseRepository.incrementViews(id);
 
       const caseDetails = {
-        id: c.id,
-        title: c.title,
-        category: c.category,
-        institution: c.institution,
-        summary: decrypt(c.summary_encrypted),
-        tags: c.tags,
-        consentObtained: c.consent_obtained === 1,
-        fileName: c.file_name,
-        fileSize: c.file_size,
-        uploadedByUserId: c.uploaded_by_user_id,
-        viewsCount: c.views_count + 1,
-        downloadsCount: c.downloads_count,
-        likesCount: c.likes_count,
-        createdAt: c.created_at
+        ...CaseController.mapCaseToResponse(c),
+        viewsCount: c.views_count + 1, // reflect the increment
       };
 
       res.status(200).json(caseDetails);

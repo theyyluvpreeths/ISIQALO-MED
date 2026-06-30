@@ -13,19 +13,42 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy for accurate IP tracking (needed behind reverse proxies and rate limiting)
+app.set('trust proxy', 1);
+
 // Security configuration (Zero-Trust)
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'", "http://localhost:5000", "ws://localhost:5173", "http://localhost:5173"]
+      connectSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      frameSrc: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"],
     }
-  }
+  },
+  crossOriginEmbedderPolicy: false,
+  hsts: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
+
+// Additional security headers
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '0'); // Modern browsers use CSP instead
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
 
 app.use(cors({
   origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
@@ -34,8 +57,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 // Express request logging
 app.use((req: Request, res: Response, next: NextFunction) => {

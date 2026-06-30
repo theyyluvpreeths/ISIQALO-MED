@@ -5,13 +5,24 @@ import { logger } from '../config/logger';
 dotenv.config();
 
 // Determine encryption key (must be 32 bytes)
-const ENCRYPTION_KEY_RAW = process.env.ENCRYPTION_KEY || 'isiqalo-med-super-secret-key-32-chars-long';
-let encryptionKey = Buffer.from(ENCRYPTION_KEY_RAW);
+const ENCRYPTION_KEY_RAW = process.env.ENCRYPTION_KEY;
+
+if (!ENCRYPTION_KEY_RAW && process.env.NODE_ENV === 'production') {
+  logger.error('FATAL: ENCRYPTION_KEY environment variable is not set. Cannot start in production without a proper encryption key.');
+  process.exit(1);
+}
+
+const keySource = ENCRYPTION_KEY_RAW || 'isiqalo-med-dev-fallback-key-32c';
+let encryptionKey = Buffer.from(keySource);
 
 if (encryptionKey.length !== 32) {
   // If the key is not 32 bytes, derive a 32-byte key using sha256
-  encryptionKey = crypto.createHash('sha256').update(ENCRYPTION_KEY_RAW).digest();
+  encryptionKey = crypto.createHash('sha256').update(keySource).digest();
   logger.warn('Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.');
+}
+
+if (!ENCRYPTION_KEY_RAW) {
+  logger.warn('Using development fallback encryption key. Set ENCRYPTION_KEY in .env for production.');
 }
 
 const ALGORITHM = 'aes-256-gcm';

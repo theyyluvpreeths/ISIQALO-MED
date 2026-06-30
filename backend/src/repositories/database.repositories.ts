@@ -25,6 +25,14 @@ export interface CaseEntity {
   summary_encrypted: string;
   tags: string; // Comma separated
   consent_obtained: number; // 0 or 1
+  patient_first_name_encrypted: string | null;
+  patient_last_name_encrypted: string | null;
+  patient_id_number_encrypted: string | null;
+  patient_dob: string | null;
+  patient_gender: string | null;
+  patient_contact_encrypted: string | null;
+  patient_medical_aid: string | null;
+  patient_medical_aid_number_encrypted: string | null;
   file_name: string | null;
   file_size: number | null;
   file_path_encrypted: string | null;
@@ -98,13 +106,20 @@ export class CaseRepository {
     const query = `
       INSERT INTO cases (
         id, title, category, institution, summary_encrypted, tags,
-        consent_obtained, file_name, file_size, file_path_encrypted,
+        consent_obtained,
+        patient_first_name_encrypted, patient_last_name_encrypted,
+        patient_id_number_encrypted, patient_dob, patient_gender,
+        patient_contact_encrypted, patient_medical_aid, patient_medical_aid_number_encrypted,
+        file_name, file_size, file_path_encrypted,
         uploaded_by_user_id, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     await dbRun(query, [
       caseData.id, caseData.title, caseData.category, caseData.institution,
       caseData.summary_encrypted, caseData.tags, caseData.consent_obtained,
+      caseData.patient_first_name_encrypted, caseData.patient_last_name_encrypted,
+      caseData.patient_id_number_encrypted, caseData.patient_dob, caseData.patient_gender,
+      caseData.patient_contact_encrypted, caseData.patient_medical_aid, caseData.patient_medical_aid_number_encrypted,
       caseData.file_name, caseData.file_size, caseData.file_path_encrypted,
       caseData.uploaded_by_user_id, caseData.created_at
     ]);

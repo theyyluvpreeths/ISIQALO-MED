@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { apiRequest } from '../utils/api';
-import { Upload, Check, Clipboard, RefreshCw, ArrowLeft, Paperclip, X } from 'lucide-react';
+import { Upload, Check, Clipboard, RefreshCw, ArrowLeft, Paperclip, X, UserPlus } from 'lucide-react';
 
 interface UploadViewProps {
   onNavigate: (tab: string) => void;
@@ -8,12 +8,25 @@ interface UploadViewProps {
 }
 
 export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
+  // Case details
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('Cardiology');
+  const [category, setCategory] = useState('General Practice / Family Medicine');
   const [institution, setInstitution] = useState('');
   const [summary, setSummary] = useState('');
   const [tags, setTags] = useState('');
   const [consentObtained, setConsentObtained] = useState(false);
+
+  // Patient demographics
+  const [patientFirstName, setPatientFirstName] = useState('');
+  const [patientLastName, setPatientLastName] = useState('');
+  const [patientIdNumber, setPatientIdNumber] = useState('');
+  const [patientDob, setPatientDob] = useState('');
+  const [patientGender, setPatientGender] = useState('');
+  const [patientContact, setPatientContact] = useState('');
+  const [patientMedicalAid, setPatientMedicalAid] = useState('');
+  const [patientMedicalAidNumber, setPatientMedicalAidNumber] = useState('');
+
+  // File upload
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   
@@ -65,7 +78,11 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
   const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !institution || !summary || !tags) {
-      showToast('Please fill in all required fields.', 'error');
+      showToast('Please fill in all required case fields.', 'error');
+      return;
+    }
+    if (!patientFirstName || !patientLastName) {
+      showToast('Patient first name and last name are required.', 'error');
       return;
     }
     if (!consentObtained) {
@@ -82,6 +99,16 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
       formData.append('summary', summary);
       formData.append('tags', tags);
       formData.append('consentObtained', consentObtained ? 'true' : 'false');
+
+      // Patient demographics
+      formData.append('patientFirstName', patientFirstName);
+      formData.append('patientLastName', patientLastName);
+      if (patientIdNumber) formData.append('patientIdNumber', patientIdNumber);
+      if (patientDob) formData.append('patientDob', patientDob);
+      if (patientGender) formData.append('patientGender', patientGender);
+      if (patientContact) formData.append('patientContact', patientContact);
+      if (patientMedicalAid) formData.append('patientMedicalAid', patientMedicalAid);
+      if (patientMedicalAidNumber) formData.append('patientMedicalAidNumber', patientMedicalAidNumber);
       
       if (file) {
         formData.append('file', file);
@@ -92,7 +119,7 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
         caseId: res.caseId,
         title: res.title
       });
-      showToast('Clinical case logged and encrypted at rest.', 'success');
+      showToast('Clinical case logged. Patient data encrypted at rest via AES-256-GCM.', 'success');
       resetForm();
     } catch (err: any) {
       showToast(err.message || 'Failed to upload case record.', 'error');
@@ -103,11 +130,19 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
 
   const resetForm = () => {
     setTitle('');
-    setCategory('Cardiology');
+    setCategory('General Practice / Family Medicine');
     setInstitution('');
     setSummary('');
     setTags('');
     setConsentObtained(false);
+    setPatientFirstName('');
+    setPatientLastName('');
+    setPatientIdNumber('');
+    setPatientDob('');
+    setPatientGender('');
+    setPatientContact('');
+    setPatientMedicalAid('');
+    setPatientMedicalAidNumber('');
     setFile(null);
   };
 
@@ -126,7 +161,7 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
         </div>
         <h2 style={{ fontSize: '1.6rem', marginBottom: '0.5rem' }}>Clinical Case Logged</h2>
         <p style={{ color: 'var(--muted-foreground)', fontSize: '0.95rem', marginBottom: '2rem' }}>
-          The medical case abstract and metadata files have been encrypted using AES-256-GCM.
+          The medical case, patient demographics, and all attachments have been encrypted using AES-256-GCM.
         </p>
 
         <div style={{ background: 'var(--input-bg)', borderRadius: 'var(--radius)', padding: '1.25rem', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
@@ -161,6 +196,109 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
       </div>
 
       <form onSubmit={handleUploadSubmit}>
+        {/* ─── PATIENT INFORMATION SECTION ─── */}
+        <div style={{ marginBottom: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)' }}>
+          <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.05rem', fontWeight: 700, marginBottom: '1rem', color: 'var(--foreground)' }}>
+            <UserPlus size={18} style={{ color: 'var(--primary)' }} /> Patient Information
+          </h4>
+          <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', marginBottom: '1.25rem', lineHeight: 1.4 }}>
+            Patient identifying information is encrypted at rest using AES-256-GCM. Only authenticated practitioners can decrypt and view these fields.
+          </p>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Patient First Name *</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="e.g. Thabo"
+                value={patientFirstName}
+                onChange={(e) => setPatientFirstName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Patient Last Name *</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="e.g. Mokoena"
+                value={patientLastName}
+                onChange={(e) => setPatientLastName(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">ID Number / Passport</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="e.g. 9501015800081"
+                value={patientIdNumber}
+                onChange={(e) => setPatientIdNumber(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Date of Birth</label>
+              <input
+                type="date"
+                className="form-input"
+                value={patientDob}
+                onChange={(e) => setPatientDob(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Gender</label>
+              <select className="form-input" value={patientGender} onChange={(e) => setPatientGender(e.target.value)}>
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Contact Number</label>
+              <input
+                type="tel"
+                className="form-input"
+                placeholder="e.g. 072 123 4567"
+                value={patientContact}
+                onChange={(e) => setPatientContact(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Medical Aid Scheme</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="e.g. Discovery Health"
+                value={patientMedicalAid}
+                onChange={(e) => setPatientMedicalAid(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Medical Aid Number</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="e.g. 900012345"
+                value={patientMedicalAidNumber}
+                onChange={(e) => setPatientMedicalAidNumber(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ─── CLINICAL CASE DETAILS ─── */}
         <div className="form-group">
           <label className="form-label">Case Study Title *</label>
           <input
@@ -177,11 +315,28 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
           <div className="form-group">
             <label className="form-label">Clinical Category *</label>
             <select className="form-input" value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="Cardiology">Cardiology</option>
-              <option value="Neurology">Neurology</option>
-              <option value="Oncology">Oncology</option>
+              <option value="General Practice / Family Medicine">General Practice / Family Medicine</option>
+              <option value="Internal Medicine">Internal Medicine</option>
               <option value="Pediatrics">Pediatrics</option>
-              <option value="General Medicine">General Medicine</option>
+              <option value="Obstetrics and Gynecology (OB/GYN)">Obstetrics and Gynecology (OB/GYN)</option>
+              <option value="Cardiology">Cardiology</option>
+              <option value="Dermatology">Dermatology</option>
+              <option value="Psychiatry">Psychiatry</option>
+              <option value="Orthopedic Surgery">Orthopedic Surgery</option>
+              <option value="Neurology">Neurology</option>
+              <option value="Ophthalmology">Ophthalmology</option>
+              <option value="General Surgery">General Surgery</option>
+              <option value="Gastroenterology">Gastroenterology</option>
+              <option value="Urology">Urology</option>
+              <option value="Oncology">Oncology</option>
+              <option value="Pulmonology">Pulmonology</option>
+              <option value="Endocrinology">Endocrinology</option>
+              <option value="Nephrology">Nephrology</option>
+              <option value="Otolaryngology (ENT)">Otolaryngology (ENT)</option>
+              <option value="Emergency Medicine">Emergency Medicine</option>
+              <option value="Radiology">Radiology</option>
+              <option value="Dentistry">Dentistry</option>
+              <option value="Other">Other</option>
             </select>
           </div>
 
@@ -225,7 +380,7 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
 
         {/* Drag Drop Upload Zone */}
         <div className="form-group">
-          <label className="form-label">Attach Anonymized Medical File / Charts (Optional)</label>
+          <label className="form-label">Attach Medical File / Charts (Optional)</label>
           {file ? (
             <div className="selected-file-pill animate-scale-up">
               <div className="file-pill-info">
@@ -247,7 +402,7 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
             >
               <Upload className="upload-icon" size={32} style={{ margin: '0 auto 0.5rem' }} />
               <p className="upload-text">Drag and drop file here, or click to browse</p>
-              <p className="upload-hint">Only anonymized PDFs, TXT files, and clinical chart images (Max 10MB)</p>
+              <p className="upload-hint">PDFs, TXT files, and clinical chart images (Max 10MB)</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -268,7 +423,7 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
               onChange={(e) => setConsentObtained(e.target.checked)}
             />
             <span style={{ color: 'var(--foreground)', fontWeight: '500' }}>
-              I certify that patient consent was legally acquired and that all clinical details and attachments uploaded are fully anonymized.
+              I certify that informed patient consent was legally obtained and that all clinical details and attachments are uploaded under HPCSA compliance guidelines. Patient PII will be encrypted at rest.
             </span>
           </label>
         </div>

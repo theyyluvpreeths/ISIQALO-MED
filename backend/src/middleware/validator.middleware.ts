@@ -50,6 +50,14 @@ export const caseUploadSchema = z.object({
   consentObtained: z.boolean().refine(val => val === true, {
     message: 'Patient consent is legally required to upload case records',
   }),
+  patientFirstName: z.string().min(1, 'Patient first name is required'),
+  patientLastName: z.string().min(1, 'Patient last name is required'),
+  patientIdNumber: z.string().min(5, 'Patient ID number must be at least 5 characters').optional().or(z.literal('')),
+  patientDob: z.string().optional().or(z.literal('')),
+  patientGender: z.enum(['Male', 'Female', 'Other']).optional().or(z.literal('')),
+  patientContact: z.string().optional().or(z.literal('')),
+  patientMedicalAid: z.string().optional().or(z.literal('')),
+  patientMedicalAidNumber: z.string().optional().or(z.literal('')),
 });
 
 export const settingsUpdateSchema = z.object({

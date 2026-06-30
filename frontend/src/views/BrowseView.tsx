@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { apiRequest } from '../utils/api';
-import { Search, Eye, Download, ThumbsUp, Calendar, MapPin, X, ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Search, Eye, Download, ThumbsUp, Calendar, MapPin, X, ArrowLeft, ArrowRight, ShieldCheck, User } from 'lucide-react';
 
 interface Case {
   id: string;
@@ -10,6 +10,14 @@ interface Case {
   summary: string;
   tags: string;
   consentObtained: boolean;
+  patientFirstName: string | null;
+  patientLastName: string | null;
+  patientIdNumber: string | null;
+  patientDob: string | null;
+  patientGender: string | null;
+  patientContact: string | null;
+  patientMedicalAid: string | null;
+  patientMedicalAidNumber: string | null;
   fileName: string | null;
   fileSize: number | null;
   uploadedByUserId: string;
@@ -51,6 +59,14 @@ export default function BrowseView({ showToast }: BrowseViewProps) {
       setLoading(false);
     }
   }
+
+  const getPatientDisplayName = (c: Case) => {
+    if (c.patientFirstName && c.patientLastName) {
+      return `${c.patientFirstName} ${c.patientLastName}`;
+    }
+    if (c.patientFirstName) return c.patientFirstName;
+    return 'Undisclosed';
+  };
 
   const handleOpenCase = async (id: string) => {
     setSelectedCaseId(id);
@@ -114,7 +130,10 @@ export default function BrowseView({ showToast }: BrowseViewProps) {
                   <h4 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.5rem', height: '40px', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
                     {c.title}
                   </h4>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', marginBottom: '1rem' }}>{c.institution}</p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', marginBottom: '0.25rem' }}>{c.institution}</p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <User size={12} /> {getPatientDisplayName(c)}
+                  </p>
                   <div className="case-stats" style={{ margin: 0, justifyContent: 'space-between' }}>
                     <span style={{ fontSize: '0.75rem', fontWeight: '500' }}>ID: {c.id}</span>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -150,11 +169,28 @@ export default function BrowseView({ showToast }: BrowseViewProps) {
 
         <select className="filter-select" value={category} onChange={(e) => setCategory(e.target.value)}>
           <option value="All">All Categories</option>
-          <option value="Cardiology">Cardiology</option>
-          <option value="Neurology">Neurology</option>
-          <option value="Oncology">Oncology</option>
+          <option value="General Practice / Family Medicine">General Practice / Family Medicine</option>
+          <option value="Internal Medicine">Internal Medicine</option>
           <option value="Pediatrics">Pediatrics</option>
-          <option value="General Medicine">General Medicine</option>
+          <option value="Obstetrics and Gynecology (OB/GYN)">Obstetrics and Gynecology (OB/GYN)</option>
+          <option value="Cardiology">Cardiology</option>
+          <option value="Dermatology">Dermatology</option>
+          <option value="Psychiatry">Psychiatry</option>
+          <option value="Orthopedic Surgery">Orthopedic Surgery</option>
+          <option value="Neurology">Neurology</option>
+          <option value="Ophthalmology">Ophthalmology</option>
+          <option value="General Surgery">General Surgery</option>
+          <option value="Gastroenterology">Gastroenterology</option>
+          <option value="Urology">Urology</option>
+          <option value="Oncology">Oncology</option>
+          <option value="Pulmonology">Pulmonology</option>
+          <option value="Endocrinology">Endocrinology</option>
+          <option value="Nephrology">Nephrology</option>
+          <option value="Otolaryngology (ENT)">Otolaryngology (ENT)</option>
+          <option value="Emergency Medicine">Emergency Medicine</option>
+          <option value="Radiology">Radiology</option>
+          <option value="Dentistry">Dentistry</option>
+          <option value="Other">Other</option>
         </select>
 
         <select className="filter-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
@@ -177,7 +213,10 @@ export default function BrowseView({ showToast }: BrowseViewProps) {
               <div>
                 <span className="status-badge status-info" style={{ marginBottom: '0.75rem' }}>{c.category}</span>
                 <h4 style={{ fontSize: '1.05rem', fontWeight: 700, marginBottom: '0.5rem', lineHeight: '1.3' }}>{c.title}</h4>
-                <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', marginBottom: '0.75rem' }}>{c.institution}</p>
+                <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', marginBottom: '0.35rem' }}>{c.institution}</p>
+                <p style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <User size={12} /> {getPatientDisplayName(c)}
+                </p>
                 
                 {/* Render Tag Badges */}
                 <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
@@ -233,6 +272,51 @@ export default function BrowseView({ showToast }: BrowseViewProps) {
                   </span>
                   <span>ID: {activeCaseDetails.id}</span>
                 </div>
+
+                {/* Patient Information Section */}
+                {(activeCaseDetails.patientFirstName || activeCaseDetails.patientLastName) && (
+                  <div style={{ background: 'var(--secondary)', border: '1px solid var(--accent)', borderRadius: 'var(--radius)', padding: '1.25rem', marginBottom: '1.5rem' }}>
+                    <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--muted-foreground)', letterSpacing: '0.05em', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <User size={14} /> Patient Demographics
+                    </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem 1.5rem', fontSize: '0.9rem' }}>
+                      <div>
+                        <span style={{ color: 'var(--muted-foreground)', fontSize: '0.75rem', fontWeight: 600 }}>Name</span>
+                        <p style={{ fontWeight: 600 }}>{getPatientDisplayName(activeCaseDetails)}</p>
+                      </div>
+                      {activeCaseDetails.patientGender && (
+                        <div>
+                          <span style={{ color: 'var(--muted-foreground)', fontSize: '0.75rem', fontWeight: 600 }}>Gender</span>
+                          <p>{activeCaseDetails.patientGender}</p>
+                        </div>
+                      )}
+                      {activeCaseDetails.patientDob && (
+                        <div>
+                          <span style={{ color: 'var(--muted-foreground)', fontSize: '0.75rem', fontWeight: 600 }}>Date of Birth</span>
+                          <p>{new Date(activeCaseDetails.patientDob).toLocaleDateString()}</p>
+                        </div>
+                      )}
+                      {activeCaseDetails.patientIdNumber && (
+                        <div>
+                          <span style={{ color: 'var(--muted-foreground)', fontSize: '0.75rem', fontWeight: 600 }}>ID / Passport</span>
+                          <p style={{ fontFamily: 'monospace' }}>{activeCaseDetails.patientIdNumber}</p>
+                        </div>
+                      )}
+                      {activeCaseDetails.patientContact && (
+                        <div>
+                          <span style={{ color: 'var(--muted-foreground)', fontSize: '0.75rem', fontWeight: 600 }}>Contact</span>
+                          <p>{activeCaseDetails.patientContact}</p>
+                        </div>
+                      )}
+                      {activeCaseDetails.patientMedicalAid && (
+                        <div>
+                          <span style={{ color: 'var(--muted-foreground)', fontSize: '0.75rem', fontWeight: 600 }}>Medical Aid</span>
+                          <p>{activeCaseDetails.patientMedicalAid} {activeCaseDetails.patientMedicalAidNumber && `(${activeCaseDetails.patientMedicalAidNumber})`}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--muted-foreground)', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>Decrypted Case Abstract</h4>
                 <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '1.25rem', marginBottom: '1.5rem', fontSize: '0.95rem', lineHeight: '1.5', whiteSpace: 'pre-wrap', color: 'var(--foreground)' }}>

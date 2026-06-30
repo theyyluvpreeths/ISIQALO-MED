@@ -96,6 +96,14 @@ function initializeDatabase() {
         summary_encrypted TEXT NOT NULL,
         tags TEXT NOT NULL,
         consent_obtained INTEGER NOT NULL DEFAULT 0,
+        patient_first_name_encrypted TEXT,
+        patient_last_name_encrypted TEXT,
+        patient_id_number_encrypted TEXT,
+        patient_dob TEXT,
+        patient_gender TEXT,
+        patient_contact_encrypted TEXT,
+        patient_medical_aid TEXT,
+        patient_medical_aid_number_encrypted TEXT,
         file_name TEXT,
         file_size INTEGER,
         file_path_encrypted TEXT,
@@ -135,6 +143,26 @@ function initializeDatabase() {
     `);
 
     logger.info('Database tables initialized successfully');
+
+    // Seed demo practitioner user if not already present
+    const existingDemo = await dbGet('SELECT id FROM users WHERE id = ?', ['demo-practitioner-001']);
+    if (!existingDemo) {
+      const now = new Date().toISOString();
+      await dbRun(`
+        INSERT INTO users (
+          id, email, password_hash, first_name, last_name, role,
+          hpcsa_number, speciality, practice_name, practice_number,
+          subscription_plan, subscription_status, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        'demo-practitioner-001', 'dr.demo@isiqalo.co.za', 'demo-no-password',
+        'Demo', 'Practitioner', 'practitioner',
+        'MP1234567', 'General Medicine', 'Isiqalo Demo Practice', '1234567',
+        'professional', 'active', now, now
+      ]);
+      logger.info('Demo practitioner user seeded into database');
+    }
+
     resolveDbInit();
   });
 }

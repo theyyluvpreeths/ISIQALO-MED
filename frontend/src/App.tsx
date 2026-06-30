@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react';
-import { apiRequest, removeToken, getToken } from './utils/api';
-import AuthView from './views/AuthView';
+import { useState } from 'react';
 import DashboardView from './views/DashboardView';
 import UploadView from './views/UploadView';
 import ExtractView from './views/ExtractView';
@@ -18,22 +16,22 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
-interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: string;
-  hpcsaNumber: string;
-  speciality: string;
-  practiceName: string;
-  practiceNumber: string;
-  subscriptionPlan: string;
-}
+// Demo practitioner user — no login required
+const DEMO_USER = {
+  id: 'demo-practitioner-001',
+  email: 'dr.demo@isiqalo.co.za',
+  firstName: 'Demo',
+  lastName: 'Practitioner',
+  role: 'practitioner',
+  hpcsaNumber: 'MP1234567',
+  speciality: 'General Medicine',
+  practiceName: 'Isiqalo Demo Practice',
+  practiceNumber: '1234567',
+  subscriptionPlan: 'professional',
+};
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(DEMO_USER);
   const [activeTab, setActiveTab] = useState('dashboard');
   
   // Toast notifications manager
@@ -46,53 +44,11 @@ export default function App() {
     }, 4000);
   };
 
-  useEffect(() => {
-    async function checkAuth() {
-      const token = getToken();
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const data = await apiRequest('/auth/me');
-        setUser(data.user);
-      } catch (err) {
-        removeToken();
-      } finally {
-        setLoading(false);
-      }
-    }
-    checkAuth();
-  }, []);
-
-  const handleLogout = () => {
-    removeToken();
-    setUser(null);
-    setActiveTab('dashboard');
-    showToast('Logged out securely.', 'success');
-  };
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f4f8' }}>
-        <div style={{ textAlign: 'center' }}>
-          <Shield size={48} className="upload-icon" style={{ animation: 'pulseBorder 1.5s infinite', color: 'var(--primary)' }} />
-          <p style={{ marginTop: '1rem', fontWeight: 600, color: 'var(--foreground)' }}>Connecting to secure portal...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Not Authenticated
-  if (!user) {
-    return <AuthView onAuthSuccess={setUser} showToast={showToast} />;
-  }
-
   // Determine Tab Label Title
   const getTabTitle = () => {
     switch (activeTab) {
       case 'dashboard': return 'Practitioner Operations Console';
-      case 'upload': return 'Anonymized Clinical Record Upload';
+      case 'upload': return 'Clinical Record Upload';
       case 'extract': return 'Data Extraction & Reporting Console';
       case 'browse': return 'Clinical Registry Directory';
       case 'settings': return 'Practitioner Security & Account Settings';
@@ -160,9 +116,11 @@ export default function App() {
             </div>
           </div>
 
-          <button className="sidebar-item" style={{ width: '100%', color: '#f87171' }} onClick={handleLogout}>
-            <LogOut size={18} /> Logout Portal
-          </button>
+          <div style={{ padding: '0.5rem 0.75rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: 'var(--radius)', border: '1px solid rgba(16, 185, 129, 0.2)', textAlign: 'center' }}>
+            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Demo Mode Active
+            </span>
+          </div>
         </div>
       </aside>
 
@@ -177,10 +135,10 @@ export default function App() {
               <span className="badge-dot"></span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#d1fae5', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius)', border: '1px solid #a7f3d0' }}>
-              <ShieldCheck size={16} style={{ color: 'var(--success)' }} />
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#065f46', textTransform: 'uppercase' }}>
-                Secure Mode
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#fef3c7', padding: '0.35rem 0.75rem', borderRadius: 'var(--radius)', border: '1px solid #fde68a' }}>
+              <ShieldCheck size={16} style={{ color: '#d97706' }} />
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#92400e', textTransform: 'uppercase' }}>
+                Demo API
               </span>
             </div>
           </div>
