@@ -11,7 +11,6 @@ import {
   Database, 
   BookOpen, 
   Settings as SettingsIcon, 
-  LogOut, 
   Bell, 
   ShieldCheck
 } from 'lucide-react';
@@ -148,7 +147,7 @@ export default function App() {
           {activeTab === 'dashboard' && <DashboardView onNavigate={setActiveTab} showToast={showToast} />}
           {activeTab === 'upload' && <UploadView onNavigate={setActiveTab} showToast={showToast} />}
           {activeTab === 'extract' && <ExtractView showToast={showToast} />}
-          {activeTab === 'browse' && <BrowseView showToast={showToast} />}
+          {activeTab === 'browse' && <BrowseView />}
           {activeTab === 'settings' && <SettingsView user={user} onUserUpdate={setUser} showToast={showToast} />}
         </div>
       </main>

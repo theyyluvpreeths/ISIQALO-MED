@@ -224,3 +224,349 @@
 {"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 11:52:36"}
 {"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 11:52:36"}
 {"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 11:52:36"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-06-30 21:40:06"}
+{"level":"info","message":"Serving static files from C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\frontend\\dist","timestamp":"2026-06-30 21:40:06"}
+{"level":"info","message":"Server successfully running on port 5000","timestamp":"2026-06-30 21:40:06"}
+{"level":"info","message":"Connected to SQLite database at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\data\\isiqalo.db","timestamp":"2026-06-30 21:40:06"}
+{"level":"info","message":"Database tables initialized successfully","timestamp":"2026-06-30 21:40:06"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:40:44"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:44"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:40:44"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:44"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:40:44"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:44"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:40:44"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:44"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:40:54"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:54"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:40:54"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:54"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:40:54"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:54"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:40:54"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:54"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-30 21:40:55"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:55"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-30 21:40:55"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:55"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:40:59"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:59"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:40:59"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:59"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:40:59"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:59"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:40:59"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:40:59"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-30 21:41:01"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:01"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-30 21:41:01"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:01"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:41:03"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:03"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:41:03"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:03"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:41:03"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:03"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:41:03"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:03"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-30 21:41:05"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:05"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-30 21:41:05"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:05"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:41:06"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:06"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:41:06"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:06"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:41:06"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:06"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:41:06"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:06"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-30 21:41:07"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:07"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-30 21:41:07"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:07"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:41:08"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:08"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:41:08"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:08"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:41:08"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:08"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:41:08"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:08"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-30 21:41:11"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:11"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-30 21:41:11"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:11"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:41:12"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:12"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:41:12"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:12"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:41:12"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:12"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:41:12"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:12"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-30 21:41:15"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:15"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-30 21:41:15"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:15"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-30 21:41:19"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:19"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-06-30 21:41:19"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:19"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:41:22"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:22"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:41:22"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:22"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:41:22"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:22"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:41:22"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:41:22"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-30 21:54:03"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:54:03"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-06-30 21:54:03"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:54:03"}
+{"level":"info","message":"GET /api/cases/case-9047a53c - IP: ::1","timestamp":"2026-06-30 21:54:05"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:54:05"}
+{"level":"info","message":"GET /api/cases/case-9feeed8c - IP: ::1","timestamp":"2026-06-30 21:54:10"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:54:10"}
+{"level":"info","message":"GET /api/cases/case-9feeed8c - IP: ::1","timestamp":"2026-06-30 21:54:14"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:54:14"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:54:22"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:54:22"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-06-30 21:54:22"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:54:22"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:54:22"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:54:22"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-06-30 21:54:22"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-06-30 21:54:22"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:29:08"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:29:08"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:29:08"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:29:08"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:29:08"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:29:08"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:29:08"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:29:08"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:30:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:30:32"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:30:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:30:32"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:30:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:30:32"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:30:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:30:32"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:17"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:17"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:17"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:17"}
+{"level":"info","message":"GET /api/cases?search=k&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:23"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:23"}
+{"level":"info","message":"GET /api/cases?search=ke&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:24"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:24"}
+{"level":"info","message":"GET /api/cases?search=kes&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:24"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:24"}
+{"level":"info","message":"GET /api/cases?search=kesh&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:24"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:24"}
+{"level":"info","message":"GET /api/cases?search=kes&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:24"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:24"}
+{"level":"info","message":"GET /api/cases?search=ke&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:25"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:25"}
+{"level":"info","message":"GET /api/cases?search=k&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:25"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:25"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:25"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:25"}
+{"level":"info","message":"GET /api/cases?search=f&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:26"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:26"}
+{"level":"info","message":"GET /api/cases?search=fu&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:26"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:26"}
+{"level":"info","message":"GET /api/cases?search=ful&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:27"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:27"}
+{"level":"info","message":"GET /api/cases?search=full&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:27"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:27"}
+{"level":"info","message":"GET /api/cases?search=ful&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:30"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:30"}
+{"level":"info","message":"GET /api/cases?search=fu&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:30"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:30"}
+{"level":"info","message":"GET /api/cases?search=f&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:30"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:30"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:39:30"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:30"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:39:43"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:43"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:39:43"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:43"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:39:43"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:43"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:39:43"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:39:43"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-07-01 08:40:40"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:40:40"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-07-01 08:40:40"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:40:40"}
+{"level":"info","message":"POST /api/extract - IP: ::1","timestamp":"2026-07-01 08:40:52"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:40:52"}
+{"level":"info","message":{"action":"DATA_EXTRACTION","details":"Extracted 1 records in JSON format.","event":"SECURITY_AUDIT","ipAddress":"::1","timestamp":"2026-07-01T06:40:52.850Z","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36","userId":"demo-practitioner-001"},"timestamp":"2026-07-01 08:40:52"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:41:29"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:41:29"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:41:29"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:41:29"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:41:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:41:32"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:41:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:41:32"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:41:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:41:32"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:41:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:41:32"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:43:42"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:43:42"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:43:42"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:43:42"}
+{"level":"info","message":"GET /api/cases/case-9feeed8c - IP: ::1","timestamp":"2026-07-01 08:43:53"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:43:53"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:44:31"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:44:31"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:44:31"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:44:31"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:44:31"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:44:31"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:44:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:44:32"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:44:41"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:44:41"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 08:44:41"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:44:41"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:45:51"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:45:51"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:45:51"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:45:51"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:45:51"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:45:51"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:45:51"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:45:51"}
+{"level":"info","message":"GET /api/settings/audit-logs - IP: ::1","timestamp":"2026-07-01 08:46:10"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:46:10"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:46:21"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:46:21"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 08:46:21"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:46:21"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:46:21"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:46:21"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 08:46:21"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 08:46:21"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 11:11:05"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:11:05"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 11:11:05"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:11:05"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 11:11:05"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:11:05"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 11:11:05"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:11:05"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 11:13:42"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:13:42"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 11:13:42"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:13:42"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 11:13:42"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:13:42"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 11:13:42"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:13:42"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-07-01 11:15:35"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:15:35"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-07-01 11:15:35"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:15:35"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 11:18:11"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:18:11"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 11:18:11"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:18:11"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 11:18:11"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:18:11"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 11:18:11"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:18:11"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-07-01 11:21:13"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:21:13"}
+{"level":"info","message":"GET /api/cases?search=&category=All - IP: ::1","timestamp":"2026-07-01 11:21:13"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:21:13"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 11:21:19"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:21:19"}
+{"level":"info","message":"GET /api/cases?search=&category=All&sort=recent - IP: ::1","timestamp":"2026-07-01 11:21:19"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 11:21:19"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 15:53:36"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 15:53:36"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 15:53:36"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 15:53:36"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 15:53:36"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 15:53:36"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 15:53:36"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 15:53:36"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 15:55:41"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 15:55:41"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 15:55:41"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 15:55:41"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 15:55:41"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 15:55:41"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 15:55:41"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 15:55:41"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 16:17:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 16:17:32"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 16:17:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 16:17:32"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 16:17:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 16:17:32"}
+{"level":"info","message":"GET /api/extract/history - IP: ::1","timestamp":"2026-07-01 16:17:32"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 16:17:32"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-07-01 16:32:33"}
+{"level":"info","message":"Serving static files from C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\frontend\\dist","timestamp":"2026-07-01 16:32:33"}
+{"level":"info","message":"Server successfully running on port 5000","timestamp":"2026-07-01 16:32:33"}
+{"code":"ESOCKET","level":"error","message":"Failed to connect to MSSQL database: Failed to connect to localhost:1433 - Could not connect (sequence)","name":"ConnectionError","originalError":{"code":"ESOCKET"},"stack":"ConnectionError: Failed to connect to localhost:1433 - Could not connect (sequence)\n    at connectListener (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\mssql\\lib\\tedious\\connection-pool.js:86:17)\n    at Connection.onConnect (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1823:9)\n    at Object.onceWrapper (node:events:631:26)\n    at Connection.emit (node:events:509:28)\n    at Connection.emit (node:domain:489:12)\n    at Connection.emit (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1985:18)\n    at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1845:14\n    at processTicksAndRejections (node:internal/process/task_queues:85:11)","timestamp":"2026-07-01 16:32:33"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-07-01 16:32:50"}
+{"level":"info","message":"Serving static files from C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\frontend\\dist","timestamp":"2026-07-01 16:32:50"}
+{"level":"info","message":"Server successfully running on port 5000","timestamp":"2026-07-01 16:32:50"}
+{"code":"ESOCKET","level":"error","message":"Failed to connect to MSSQL database: Failed to connect to localhost:1433 - Could not connect (sequence)","name":"ConnectionError","originalError":{"code":"ESOCKET"},"stack":"ConnectionError: Failed to connect to localhost:1433 - Could not connect (sequence)\n    at connectListener (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\mssql\\lib\\tedious\\connection-pool.js:86:17)\n    at Connection.onConnect (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1823:9)\n    at Object.onceWrapper (node:events:631:26)\n    at Connection.emit (node:events:509:28)\n    at Connection.emit (node:domain:489:12)\n    at Connection.emit (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1985:18)\n    at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1845:14\n    at processTicksAndRejections (node:internal/process/task_queues:85:11)","timestamp":"2026-07-01 16:32:51"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-07-01 16:33:09"}
+{"code":"ESOCKET","level":"error","message":"Failed to connect to MSSQL database: Failed to connect to localhost:1433 - Could not connect (sequence)","name":"ConnectionError","originalError":{"code":"ESOCKET"},"stack":"ConnectionError: Failed to connect to localhost:1433 - Could not connect (sequence)\n    at connectListener (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\mssql\\lib\\tedious\\connection-pool.js:86:17)\n    at Connection.onConnect (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1823:9)\n    at Object.onceWrapper (node:events:631:26)\n    at Connection.emit (node:events:509:28)\n    at Connection.emit (node:domain:489:12)\n    at Connection.emit (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1985:18)\n    at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1845:14\n    at processTicksAndRejections (node:internal/process/task_queues:85:11)","timestamp":"2026-07-01 16:33:09"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-07-01 16:36:19"}
+{"code":"ESOCKET","level":"error","message":"Failed to connect to MSSQL database: Failed to connect to localhost:1433 - Could not connect (sequence)","name":"ConnectionError","originalError":{"code":"ESOCKET"},"stack":"ConnectionError: Failed to connect to localhost:1433 - Could not connect (sequence)\n    at connectListener (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\mssql\\lib\\tedious\\connection-pool.js:86:17)\n    at Connection.onConnect (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1823:9)\n    at Object.onceWrapper (node:events:631:26)\n    at Connection.emit (node:events:509:28)\n    at Connection.emit (node:domain:489:12)\n    at Connection.emit (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1985:18)\n    at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1845:14\n    at processTicksAndRejections (node:internal/process/task_queues:85:11)","timestamp":"2026-07-01 16:36:19"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-07-01 16:52:50"}
+{"level":"info","message":"Serving static files from C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\frontend\\dist","timestamp":"2026-07-01 16:52:50"}
+{"level":"info","message":"Server successfully running on port 5000","timestamp":"2026-07-01 16:52:50"}
+{"code":"ESOCKET","level":"error","message":"Failed to connect to MSSQL database: Failed to connect to localhost:1433 - Could not connect (sequence)","name":"ConnectionError","originalError":{"code":"ESOCKET"},"stack":"ConnectionError: Failed to connect to localhost:1433 - Could not connect (sequence)\n    at connectListener (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\mssql\\lib\\tedious\\connection-pool.js:86:17)\n    at Connection.onConnect (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1823:9)\n    at Object.onceWrapper (node:events:631:26)\n    at Connection.emit (node:events:509:28)\n    at Connection.emit (node:domain:489:12)\n    at Connection.emit (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1985:18)\n    at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1845:14\n    at processTicksAndRejections (node:internal/process/task_queues:85:11)","timestamp":"2026-07-01 16:52:50"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-07-01 16:53:28"}
+{"level":"info","message":"Serving static files from C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\frontend\\dist","timestamp":"2026-07-01 16:53:28"}
+{"level":"info","message":"Server successfully running on port 5000","timestamp":"2026-07-01 16:53:28"}
+{"code":"ESOCKET","level":"error","message":"Failed to connect to MSSQL database: Failed to connect to localhost:1433 - Could not connect (sequence)","name":"ConnectionError","originalError":{"code":"ESOCKET"},"stack":"ConnectionError: Failed to connect to localhost:1433 - Could not connect (sequence)\n    at connectListener (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\mssql\\lib\\tedious\\connection-pool.js:86:17)\n    at Connection.onConnect (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1823:9)\n    at Object.onceWrapper (node:events:631:26)\n    at Connection.emit (node:events:509:28)\n    at Connection.emit (node:domain:489:12)\n    at Connection.emit (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1985:18)\n    at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1845:14\n    at processTicksAndRejections (node:internal/process/task_queues:85:11)","timestamp":"2026-07-01 16:53:28"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 16:54:34"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 16:54:34"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-07-01 16:57:32"}
+{"level":"info","message":"Serving static files from C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\frontend\\dist","timestamp":"2026-07-01 16:57:32"}
+{"level":"info","message":"Server successfully running on port 5000","timestamp":"2026-07-01 16:57:32"}
+{"code":"ESOCKET","level":"error","message":"Failed to connect to MSSQL database: Failed to connect to localhost:1433 - Could not connect (sequence)","name":"ConnectionError","originalError":{"code":"ESOCKET"},"stack":"ConnectionError: Failed to connect to localhost:1433 - Could not connect (sequence)\n    at connectListener (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\mssql\\lib\\tedious\\connection-pool.js:86:17)\n    at Connection.onConnect (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1823:9)\n    at Object.onceWrapper (node:events:631:26)\n    at Connection.emit (node:events:509:28)\n    at Connection.emit (node:domain:489:12)\n    at Connection.emit (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1985:18)\n    at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1845:14\n    at processTicksAndRejections (node:internal/process/task_queues:85:11)","timestamp":"2026-07-01 16:57:32"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-07-01 17:04:35"}
+{"level":"info","message":"Serving static files from C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\frontend\\dist","timestamp":"2026-07-01 17:04:35"}
+{"level":"info","message":"Server successfully running on port 5000","timestamp":"2026-07-01 17:04:35"}
+{"code":"ESOCKET","level":"error","message":"Failed to connect to MSSQL database: Failed to connect to localhost:1433 - Could not connect (sequence)","name":"ConnectionError","originalError":{"code":"ESOCKET"},"stack":"ConnectionError: Failed to connect to localhost:1433 - Could not connect (sequence)\n    at connectListener (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\mssql\\lib\\tedious\\connection-pool.js:86:17)\n    at Connection.onConnect (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1823:9)\n    at Object.onceWrapper (node:events:631:26)\n    at Connection.emit (node:events:509:28)\n    at Connection.emit (node:domain:489:12)\n    at Connection.emit (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1985:18)\n    at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1845:14\n    at processTicksAndRejections (node:internal/process/task_queues:85:11)","timestamp":"2026-07-01 17:04:35"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 17:05:49"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 17:05:49"}
+{"level":"info","message":"GET /api/facilities - IP: ::1","timestamp":"2026-07-01 17:05:51"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 17:05:51"}
+{"level":"error","message":"Database Error in dbAll: RequestError: No connection is specified for that request.","timestamp":"2026-07-01 17:05:51"}
+{"level":"info","message":"GET /api/facilities - IP: ::1","timestamp":"2026-07-01 17:05:51"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 17:05:51"}
+{"level":"error","message":"Database Error in dbAll: RequestError: No connection is specified for that request.","timestamp":"2026-07-01 17:05:51"}
+{"level":"info","message":"GET /api/patients - IP: ::1","timestamp":"2026-07-01 17:06:22"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 17:06:22"}
+{"level":"error","message":"Database Error in dbAll: RequestError: No connection is specified for that request.","timestamp":"2026-07-01 17:06:22"}
+{"level":"info","message":"GET /api/patients - IP: ::1","timestamp":"2026-07-01 17:06:22"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 17:06:22"}
+{"level":"error","message":"Database Error in dbAll: RequestError: No connection is specified for that request.","timestamp":"2026-07-01 17:06:22"}
+{"level":"info","message":"GET /api/facilities - IP: ::1","timestamp":"2026-07-01 17:07:41"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 17:07:41"}
+{"level":"error","message":"Database Error in dbAll: RequestError: No connection is specified for that request.","timestamp":"2026-07-01 17:07:41"}
+{"level":"info","message":"GET /api/facilities - IP: ::1","timestamp":"2026-07-01 17:07:41"}
+{"level":"info","message":"[DEMO MODE] Auto-authenticated as dr.demo@isiqalo.co.za","timestamp":"2026-07-01 17:07:41"}
+{"level":"error","message":"Database Error in dbAll: RequestError: No connection is specified for that request.","timestamp":"2026-07-01 17:07:41"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 17:12:58"}
+{"level":"info","message":"GET /api/cases - IP: ::1","timestamp":"2026-07-01 17:12:58"}
+{"level":"warn","message":"Encryption key was not 32 bytes. Derived a 32-byte key using SHA-256.","timestamp":"2026-07-01 17:17:11"}
+{"level":"info","message":"Serving static files from C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\frontend\\dist","timestamp":"2026-07-01 17:17:11"}
+{"level":"info","message":"Server successfully running on port 5000","timestamp":"2026-07-01 17:17:11"}
+{"code":"ESOCKET","level":"error","message":"Failed to connect to MSSQL database: Failed to connect to localhost:1433 - Could not connect (sequence)","name":"ConnectionError","originalError":{"code":"ESOCKET"},"stack":"ConnectionError: Failed to connect to localhost:1433 - Could not connect (sequence)\n    at connectListener (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\mssql\\lib\\tedious\\connection-pool.js:86:17)\n    at Connection.onConnect (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1823:9)\n    at Object.onceWrapper (node:events:631:26)\n    at Connection.emit (node:events:509:28)\n    at Connection.emit (node:domain:489:12)\n    at Connection.emit (C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1985:18)\n    at C:\\Users\\CADCAM\\.antigravity-ide\\ISIQALO MED\\backend\\node_modules\\tedious\\src\\connection.ts:1845:14\n    at processTicksAndRejections (node:internal/process/task_queues:85:11)","timestamp":"2026-07-01 17:17:11"}

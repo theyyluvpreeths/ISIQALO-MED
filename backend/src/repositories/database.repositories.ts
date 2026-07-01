@@ -17,35 +17,41 @@ export interface UserEntity {
   updated_at: string;
 }
 
-export interface CaseEntity {
+export interface PatientEntity {
   id: string;
-  title: string;
-  category: string;
-  institution: string;
-  summary_encrypted: string;
-  tags: string; // Comma separated
-  consent_obtained: number; // 0 or 1
-  patient_first_name_encrypted: string | null;
-  patient_last_name_encrypted: string | null;
-  patient_id_number_encrypted: string | null;
-  patient_dob: string | null;
-  patient_gender: string | null;
-  patient_contact_encrypted: string | null;
-  patient_medical_aid: string | null;
-  patient_medical_aid_number_encrypted: string | null;
-  file_name: string | null;
-  file_size: number | null;
-  file_path_encrypted: string | null;
-  uploaded_by_user_id: string;
-  views_count: number;
-  downloads_count: number;
-  likes_count: number;
+  organisation_name: string;
+  facility_type: string;
+  medicine_type: string;
+  is_priority: number;
+  suffering_from: string;
+  treatment_name: string;
+  treatment_notes_encrypted: string | null;
+  existing_info_encrypted: string | null;
+  first_name_encrypted: string | null;
+  last_name_encrypted: string | null;
+  id_number_encrypted: string | null;
+  dob: string | null;
+  gender: string | null;
+  contact_encrypted: string | null;
+  medical_aid: string | null;
+  medical_aid_number_encrypted: string | null;
   created_at: string;
+}
+
+export interface PatientDocumentEntity {
+  id: string;
+  patient_id: string;
+  uploaded_by_doctor_id: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  file_path_encrypted: string;
+  uploaded_at: string;
 }
 
 export interface ExtractionEntity {
   id: string;
-  case_id: string;
+  patient_id: string;
   user_id: string;
   format: string;
   extracted_at: string;
@@ -64,7 +70,7 @@ export interface AuditLogEntity {
 export class UserRepository {
   static async createUser(user: UserEntity): Promise<void> {
     const query = `
-      INSERT INTO users (
+      INSERT INTO auth.users (
         id, email, password_hash, first_name, last_name, role,
         hpcsa_number, speciality, practice_name, practice_number,
         subscription_plan, subscription_status, created_at, updated_at
@@ -78,11 +84,11 @@ export class UserRepository {
   }
 
   static async getUserById(id: string): Promise<UserEntity | null> {
-    return await dbGet('SELECT * FROM users WHERE id = ?', [id]);
+    return await dbGet('SELECT * FROM auth.users WHERE id = ?', [id]);
   }
 
   static async getUserByEmail(email: string): Promise<UserEntity | null> {
-    return await dbGet('SELECT * FROM users WHERE email = ?', [email]);
+    return await dbGet('SELECT * FROM auth.users WHERE email = ?', [email]);
   }
 
   static async updateUser(id: string, updates: Partial<Omit<UserEntity, 'id' | 'created_at'>>): Promise<void> {
@@ -93,7 +99,7 @@ export class UserRepository {
     const params = fields.map(field => (updates as any)[field]);
     params.push(id);
 
-    await dbRun(`UPDATE users SET ${setClause}, updated_at = ? WHERE id = ?`, [
+    await dbRun(`UPDATE auth.users SET ${setClause}, updated_at = ? WHERE id = ?`, [
       ...params.slice(0, -1),
       new Date().toISOString(),
       id
@@ -101,112 +107,89 @@ export class UserRepository {
   }
 }
 
-export class CaseRepository {
-  static async createCase(caseData: Omit<CaseEntity, 'views_count' | 'downloads_count' | 'likes_count'>): Promise<void> {
+export class PatientRepository {
+  static async createPatient(patient: PatientEntity, doctorId: string): Promise<void> {
     const query = `
-      INSERT INTO cases (
-        id, title, category, institution, summary_encrypted, tags,
-        consent_obtained,
-        patient_first_name_encrypted, patient_last_name_encrypted,
-        patient_id_number_encrypted, patient_dob, patient_gender,
-        patient_contact_encrypted, patient_medical_aid, patient_medical_aid_number_encrypted,
-        file_name, file_size, file_path_encrypted,
-        uploaded_by_user_id, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO pacs.patients (
+        id, organisation_name, facility_type, medicine_type, is_priority, suffering_from,
+        treatment_name, treatment_notes_encrypted, existing_info_encrypted,
+        first_name_encrypted, last_name_encrypted, id_number_encrypted, dob, gender,
+        contact_encrypted, medical_aid, medical_aid_number_encrypted, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     await dbRun(query, [
-      caseData.id, caseData.title, caseData.category, caseData.institution,
-      caseData.summary_encrypted, caseData.tags, caseData.consent_obtained,
-      caseData.patient_first_name_encrypted, caseData.patient_last_name_encrypted,
-      caseData.patient_id_number_encrypted, caseData.patient_dob, caseData.patient_gender,
-      caseData.patient_contact_encrypted, caseData.patient_medical_aid, caseData.patient_medical_aid_number_encrypted,
-      caseData.file_name, caseData.file_size, caseData.file_path_encrypted,
-      caseData.uploaded_by_user_id, caseData.created_at
+      patient.id, patient.organisation_name, patient.facility_type, patient.medicine_type,
+      patient.is_priority, patient.suffering_from, patient.treatment_name, patient.treatment_notes_encrypted,
+      patient.existing_info_encrypted, patient.first_name_encrypted, patient.last_name_encrypted,
+      patient.id_number_encrypted, patient.dob, patient.gender, patient.contact_encrypted,
+      patient.medical_aid, patient.medical_aid_number_encrypted, patient.created_at
+    ]);
+
+    // Map doctor to patient
+    await dbRun(`INSERT INTO pacs.patient_doctors (patient_id, doctor_id, assigned_at) VALUES (?, ?, ?)`, [
+      patient.id, doctorId, patient.created_at
     ]);
   }
 
-  static async getCaseById(id: string): Promise<CaseEntity | null> {
-    return await dbGet('SELECT * FROM cases WHERE id = ?', [id]);
+  static async getPatientById(id: string): Promise<PatientEntity | null> {
+    return await dbGet('SELECT * FROM pacs.patients WHERE id = ?', [id]);
   }
 
-  static async getAllCases(filters: { search?: string; category?: string; sort?: string } = {}): Promise<CaseEntity[]> {
-    let query = 'SELECT * FROM cases';
-    const params: any[] = [];
-    const clauses: string[] = [];
-
-    if (filters.category && filters.category !== 'All') {
-      clauses.push('category = ?');
-      params.push(filters.category);
-    }
-
-    if (filters.search) {
-      clauses.push('(title LIKE ? OR institution LIKE ? OR tags LIKE ?)');
-      const wild = `%${filters.search}%`;
-      params.push(wild, wild, wild);
-    }
-
-    if (clauses.length > 0) {
-      query += ` WHERE ${clauses.join(' AND ')}`;
-    }
-
-    if (filters.sort) {
-      if (filters.sort === 'views') {
-        query += ' ORDER BY views_count DESC';
-      } else if (filters.sort === 'downloads') {
-        query += ' ORDER BY downloads_count DESC';
-      } else if (filters.sort === 'likes') {
-        query += ' ORDER BY likes_count DESC';
-      } else {
-        query += ' ORDER BY created_at DESC'; // default to recent
-      }
-    } else {
-      query += ' ORDER BY created_at DESC';
-    }
-
-    return await dbAll(query, params);
+  static async getPatientsForDoctor(doctorId: string): Promise<PatientEntity[]> {
+    const query = `
+      SELECT p.* FROM pacs.patients p
+      INNER JOIN pacs.patient_doctors pd ON p.id = pd.patient_id
+      WHERE pd.doctor_id = ?
+      ORDER BY p.is_priority DESC, p.created_at DESC
+    `;
+    return await dbAll(query, [doctorId]);
   }
 
-  static async incrementViews(id: string): Promise<void> {
-    await dbRun('UPDATE cases SET views_count = views_count + 1 WHERE id = ?', [id]);
+  static async isDoctorAssignedToPatient(doctorId: string, patientId: string): Promise<boolean> {
+    const result = await dbGet('SELECT 1 FROM pacs.patient_doctors WHERE doctor_id = ? AND patient_id = ?', [doctorId, patientId]);
+    return !!result;
+  }
+  
+  static async updatePatient(id: string, updates: Partial<Omit<PatientEntity, 'id' | 'created_at'>>): Promise<void> {
+    const fields = Object.keys(updates);
+    if (fields.length === 0) return;
+
+    const setClause = fields.map(field => `${field} = ?`).join(', ');
+    const params = fields.map(field => (updates as any)[field]);
+    params.push(id);
+
+    await dbRun(`UPDATE pacs.patients SET ${setClause} WHERE id = ?`, params);
+  }
+}
+
+export class DocumentRepository {
+  static async createDocument(doc: PatientDocumentEntity): Promise<void> {
+    const query = `
+      INSERT INTO pacs.patient_documents (
+        id, patient_id, uploaded_by_doctor_id, file_name, file_type, file_size, file_path_encrypted, uploaded_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+    await dbRun(query, [
+      doc.id, doc.patient_id, doc.uploaded_by_doctor_id, doc.file_name, doc.file_type, doc.file_size, doc.file_path_encrypted, doc.uploaded_at
+    ]);
   }
 
-  static async incrementDownloads(id: string): Promise<void> {
-    await dbRun('UPDATE cases SET downloads_count = downloads_count + 1 WHERE id = ?', [id]);
-  }
-
-  static async incrementLikes(id: string): Promise<void> {
-    await dbRun('UPDATE cases SET likes_count = likes_count + 1 WHERE id = ?', [id]);
+  static async getDocumentsByPatientId(patientId: string): Promise<PatientDocumentEntity[]> {
+    return await dbAll('SELECT * FROM pacs.patient_documents WHERE patient_id = ? ORDER BY uploaded_at DESC', [patientId]);
   }
 }
 
 export class ExtractionRepository {
-  static async createExtraction(extraction: ExtractionEntity): Promise<void> {
-    const query = `
-      INSERT INTO extractions (id, case_id, user_id, format, extracted_at)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    await dbRun(query, [
-      extraction.id, extraction.case_id, extraction.user_id,
-      extraction.format, extraction.extracted_at
-    ]);
-  }
-
   static async getExtractionsByUserId(userId: string): Promise<any[]> {
-    const query = `
-      SELECT e.*, c.title as case_title, c.category as case_category 
-      FROM extractions e
-      JOIN cases c ON e.case_id = c.id
-      WHERE e.user_id = ?
-      ORDER BY e.extracted_at DESC
-    `;
-    return await dbAll(query, [userId]);
+    // Left as stub since extraction functionality will need total rewrite
+    return [];
   }
 }
 
 export class AuditLogRepository {
   static async createAuditLog(log: AuditLogEntity): Promise<void> {
     const query = `
-      INSERT INTO audit_logs (id, user_id, action, ip_address, user_agent, details, created_at)
+      INSERT INTO audit.logs (id, user_id, action, ip_address, user_agent, details, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
     await dbRun(query, [
@@ -216,10 +199,10 @@ export class AuditLogRepository {
   }
 
   static async getAuditLogsByUserId(userId: string): Promise<AuditLogEntity[]> {
-    return await dbAll('SELECT * FROM audit_logs WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+    return await dbAll('SELECT * FROM audit.logs WHERE user_id = ? ORDER BY created_at DESC', [userId]);
   }
 
   static async getAllAuditLogs(): Promise<AuditLogEntity[]> {
-    return await dbAll('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 100');
+    return await dbAll('SELECT TOP 100 * FROM audit.logs ORDER BY created_at DESC');
   }
 }

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { apiRequest } from '../utils/api';
-import { Search, Database, CheckSquare, Square } from 'lucide-react';
+import { Search, Database, CheckSquare, Square, AlertTriangle } from 'lucide-react';
 
-interface Case {
+interface Patient {
   id: string;
-  title: string;
-  category: string;
-  institution: string;
+  facilityId: string;
+  isPriority: boolean;
+  sufferingFrom: string;
+  firstName: string | null;
+  lastName: string | null;
   createdAt: string;
 }
 
@@ -15,10 +17,9 @@ interface ExtractViewProps {
 }
 
 export default function ExtractView({ showToast }: ExtractViewProps) {
-  const [cases, setCases] = useState<Case[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('All');
   
   // Selection state
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -27,15 +28,15 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    fetchCases();
-  }, [search, category]);
+    fetchPatients();
+  }, []);
 
-  async function fetchCases() {
+  async function fetchPatients() {
     try {
-      const data = await apiRequest(`/cases?search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}`);
-      setCases(data);
+      const data = await apiRequest('/patients', 'GET');
+      setPatients(data || []);
     } catch (err: any) {
-      showToast('Failed to retrieve cases.', 'error');
+      showToast('Failed to retrieve patient roster.', 'error');
     } finally {
       setLoading(false);
     }
@@ -50,10 +51,10 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
   };
 
   const handleSelectAll = () => {
-    if (selectedIds.length === cases.length) {
+    if (selectedIds.length === filteredPatients.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(cases.map(c => c.id));
+      setSelectedIds(filteredPatients.map(p => p.id));
     }
   };
 
@@ -71,11 +72,34 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
     }
 
     try {
-      await apiRequest('/extract', 'POST', {
-        caseIds: selectedIds,
-        format: extractFormat
+      // Create a blob request for extraction
+      const res = await fetch('/api/extract', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          patientIds: selectedIds,
+          format: extractFormat
+        })
       });
-      showToast(`Successfully extracted ${selectedIds.length} case records in ${extractFormat} format.`, 'success');
+
+      if (!res.ok) {
+        throw new Error('Failed to extract data');
+      }
+
+      // Download logic
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `isiqalo_pacs_extract_${Date.now()}.${extractFormat.toLowerCase()}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      showToast(`Successfully extracted ${selectedIds.length} patient records in ${extractFormat} format.`, 'success');
       setSelectedIds([]);
     } catch (err: any) {
       showToast(err.message || 'Data extraction failed.', 'error');
@@ -85,96 +109,80 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
     }
   };
 
+  const filteredPatients = patients.filter(p => {
+    const fullName = `${p.firstName || ''} ${p.lastName || ''}`.toLowerCase();
+    const cond = (p.sufferingFrom || '').toLowerCase();
+    const searchLow = search.toLowerCase();
+    return fullName.includes(searchLow) || cond.includes(searchLow) || p.id.toLowerCase().includes(searchLow);
+  });
+
   return (
     <div className="panel-card animate-slide-up" style={{ minHeight: '450px', paddingBottom: selectedIds.length > 0 ? '5rem' : '1.5rem' }}>
       <div className="panel-header">
-        <h3 className="panel-title">Data Extraction Console</h3>
-        <span style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>Bulk export case files for statistical processing</span>
+        <h3 className="panel-title">Data Extraction (PACS)</h3>
+        <span style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>Bulk export patient records and clinical history</span>
       </div>
 
       {/* Filters Bar */}
-      <div className="filters-bar">
-        <div className="search-wrapper">
+      <div className="filters-bar" style={{ marginBottom: '1.5rem' }}>
+        <div className="search-wrapper" style={{ width: '100%' }}>
           <Search size={18} className="search-icon" />
           <input
             type="text"
             className="search-input"
-            placeholder="Search records by ID, title, or keywords..."
+            placeholder="Search patients by ID, name, or condition..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            style={{ width: '100%' }}
           />
         </div>
-
-        <select className="filter-select" value={category} onChange={(e) => setCategory(e.target.value)}>
-          <option value="All">All Categories</option>
-          <option value="General Practice / Family Medicine">General Practice / Family Medicine</option>
-          <option value="Internal Medicine">Internal Medicine</option>
-          <option value="Pediatrics">Pediatrics</option>
-          <option value="Obstetrics and Gynecology (OB/GYN)">Obstetrics and Gynecology (OB/GYN)</option>
-          <option value="Cardiology">Cardiology</option>
-          <option value="Dermatology">Dermatology</option>
-          <option value="Psychiatry">Psychiatry</option>
-          <option value="Orthopedic Surgery">Orthopedic Surgery</option>
-          <option value="Neurology">Neurology</option>
-          <option value="Ophthalmology">Ophthalmology</option>
-          <option value="General Surgery">General Surgery</option>
-          <option value="Gastroenterology">Gastroenterology</option>
-          <option value="Urology">Urology</option>
-          <option value="Oncology">Oncology</option>
-          <option value="Pulmonology">Pulmonology</option>
-          <option value="Endocrinology">Endocrinology</option>
-          <option value="Nephrology">Nephrology</option>
-          <option value="Otolaryngology (ENT)">Otolaryngology (ENT)</option>
-          <option value="Emergency Medicine">Emergency Medicine</option>
-          <option value="Radiology">Radiology</option>
-          <option value="Dentistry">Dentistry</option>
-          <option value="Other">Other</option>
-        </select>
       </div>
 
-      {/* Main Case List Table */}
+      {/* Main List Table */}
       <div className="data-table-container">
         {loading ? (
           <p style={{ color: 'var(--muted-foreground)', padding: '2rem', textAlign: 'center' }}>Syncing secure directory...</p>
-        ) : cases.length === 0 ? (
-          <p style={{ color: 'var(--muted-foreground)', padding: '2rem', textAlign: 'center' }}>No matches found in clinical registry.</p>
+        ) : filteredPatients.length === 0 ? (
+          <p style={{ color: 'var(--muted-foreground)', padding: '2rem', textAlign: 'center' }}>No patients found.</p>
         ) : (
           <table className="data-table">
             <thead>
               <tr>
                 <th style={{ width: '40px', cursor: 'pointer' }} onClick={handleSelectAll}>
-                  {selectedIds.length === cases.length && cases.length > 0 ? (
+                  {selectedIds.length === filteredPatients.length && filteredPatients.length > 0 ? (
                     <CheckSquare size={18} style={{ color: 'var(--primary)' }} />
                   ) : (
                     <Square size={18} />
                   )}
                 </th>
-                <th>Case ID</th>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Institution</th>
+                <th>Patient ID</th>
+                <th>Name</th>
+                <th>Condition</th>
+                <th>Priority</th>
                 <th>Date Logged</th>
               </tr>
             </thead>
             <tbody>
-              {cases.map((c) => {
-                const isSelected = selectedIds.includes(c.id);
+              {filteredPatients.map((p) => {
+                const isSelected = selectedIds.includes(p.id);
                 return (
-                  <tr key={c.id} style={{ background: isSelected ? 'var(--secondary)' : 'none' }}>
-                    <td style={{ cursor: 'pointer' }} onClick={() => handleSelectToggle(c.id)}>
+                  <tr key={p.id} style={{ background: isSelected ? 'var(--secondary)' : 'none' }}>
+                    <td style={{ cursor: 'pointer' }} onClick={() => handleSelectToggle(p.id)}>
                       {isSelected ? (
                         <CheckSquare size={18} style={{ color: 'var(--primary)' }} />
                       ) : (
                         <Square size={18} />
                       )}
                     </td>
-                    <td style={{ fontWeight: '600', color: 'var(--primary)' }}>{c.id}</td>
-                    <td style={{ fontWeight: '500' }}>{c.title}</td>
+                    <td style={{ fontWeight: '600', color: 'var(--primary)' }}>{p.id}</td>
+                    <td style={{ fontWeight: '500' }}>{p.firstName} {p.lastName}</td>
+                    <td>{p.sufferingFrom}</td>
                     <td>
-                      <span className="status-badge status-info">{c.category}</span>
+                      {p.isPriority ? (
+                        <span className="badge badge-error" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}><AlertTriangle size={12}/> PRIORITY</span>
+                      ) : '-'}
                     </td>
-                    <td>{c.institution}</td>
-                    <td>{new Date(c.createdAt).toLocaleDateString()}</td>
+                    <td>{new Date(p.createdAt).toLocaleDateString()}</td>
                   </tr>
                 );
               })}
@@ -187,10 +195,10 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
       {selectedIds.length > 0 && (
         <div className="extract-bar animate-slide-up">
           <div className="extract-info">
-            <span style={{ fontWeight: '700', color: 'var(--primary)' }}>{selectedIds.length}</span> record(s) selected
+            <span style={{ fontWeight: '700', color: 'var(--primary)' }}>{selectedIds.length}</span> patient(s) selected
             {extracting && (
               <span style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', marginLeft: '1rem' }}>
-                Decrypting & compiling ({progress}%)
+                Fetching & compiling ({progress}%)
               </span>
             )}
           </div>
@@ -198,25 +206,24 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
           <div className="extract-actions">
             {extracting ? (
               // Progress Bar
-              <div style={{ width: '220px', height: '8px', background: 'var(--muted)', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ width: `${progress}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.2s' }}></div>
+              <div style={{ width: '250px', background: 'var(--border)', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{ width: `${progress}%`, background: 'var(--primary)', height: '100%', transition: 'width 0.3s ease' }}></div>
               </div>
             ) : (
-              // Format Toggles & Trigger Button
               <>
-                <div className="format-selectors">
-                  {(['JSON', 'CSV', 'PDF', 'ZIP'] as const).map(fmt => (
-                    <button
-                      key={fmt}
-                      className={`format-btn ${extractFormat === fmt ? 'active' : ''}`}
-                      onClick={() => setExtractFormat(fmt)}
-                    >
-                      {fmt}
-                    </button>
-                  ))}
-                </div>
+                <select 
+                  className="form-input" 
+                  style={{ width: 'auto', minWidth: '120px', padding: '0.5rem' }}
+                  value={extractFormat}
+                  onChange={(e) => setExtractFormat(e.target.value as any)}
+                >
+                  <option value="JSON">JSON Data</option>
+                  <option value="CSV">CSV Spreadsheet</option>
+                  <option value="PDF">PDF Report (Mock)</option>
+                  <option value="ZIP">ZIP Archive (Mock)</option>
+                </select>
 
-                <button className="btn btn-primary" style={{ width: 'auto' }} onClick={handleRunExtraction}>
+                <button className="btn btn-primary" style={{ padding: '0.5rem 1.25rem' }} onClick={handleRunExtraction}>
                   <Database size={16} /> Run Extraction
                 </button>
               </>

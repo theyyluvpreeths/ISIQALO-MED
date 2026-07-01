@@ -2,6 +2,10 @@ const API_BASE_URL = '/api';
 
 const REQUEST_TIMEOUT_MS = 30000; // 30 second timeout
 
+export const setToken = (token: string) => {
+  localStorage.setItem('token', token);
+};
+
 export async function apiRequest(endpoint: string, method: string = 'GET', body: any = null, isMultipart: boolean = false) {
   const headers: HeadersInit = {};
 

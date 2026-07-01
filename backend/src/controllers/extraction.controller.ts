@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import crypto from 'crypto';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
-import { CaseRepository, ExtractionRepository, AuditLogRepository } from '../repositories/database.repositories';
+import { PatientRepository, ExtractionRepository, AuditLogRepository, DocumentRepository } from '../repositories/database.repositories';
 import { decrypt } from '../services/encryption';
 import { logSecurityEvent } from '../config/logger';
 
@@ -13,9 +13,9 @@ export class ExtractionController {
         return;
       }
 
-      const { caseIds, format } = req.body;
-      if (!Array.isArray(caseIds) || caseIds.length === 0) {
-        res.status(400).json({ error: 'Please select at least one medical case to perform data extraction.' });
+      const { patientIds, format } = req.body;
+      if (!Array.isArray(patientIds) || patientIds.length === 0) {
+        res.status(400).json({ error: 'Please select at least one patient to perform data extraction.' });
         return;
       }
 
@@ -29,38 +29,38 @@ export class ExtractionController {
       const userAgent = req.headers['user-agent'] || 'unknown';
       const now = new Date().toISOString();
 
-      const extractedCasesData: any[] = [];
+      const extractedData: any[] = [];
 
-      for (const id of caseIds) {
-        const c = await CaseRepository.getCaseById(id);
-        if (c) {
-          // Increment download counters
-          await CaseRepository.incrementDownloads(id);
+      for (const id of patientIds) {
+        const p = await PatientRepository.getPatientById(id);
+        
+        // RBAC Check for extraction: Ensure doctor is assigned or is admin
+        if (req.user.role !== 'admin' && req.user.role !== 'superadmin') {
+            const isAssigned = await PatientRepository.isDoctorAssignedToPatient(req.user.id, id);
+            if (!isAssigned) continue; // skip patients they don't have access to
+        }
 
-          const summaryDecrypted = decrypt(c.summary_encrypted);
-          extractedCasesData.push({
-            id: c.id,
-            title: c.title,
-            category: c.category,
-            institution: c.institution,
-            summary: summaryDecrypted,
-            tags: c.tags,
-            createdAt: c.created_at,
-          });
+        if (p) {
+          const docs = await DocumentRepository.getDocumentsByPatientId(id);
 
-          // Insert into extractions tracking table
-          await ExtractionRepository.createExtraction({
-            id: crypto.randomUUID(),
-            case_id: id,
-            user_id: req.user.id,
-            format: targetFormat,
-            extracted_at: now
+          extractedData.push({
+            id: p.id,
+            organisationName: p.organisation_name,
+            facilityType: p.facility_type,
+            medicineType: p.medicine_type,
+            isPriority: p.is_priority === 1,
+            sufferingFrom: p.suffering_from,
+            treatmentName: p.treatment_name,
+            treatmentNotes: p.treatment_notes_encrypted ? decrypt(p.treatment_notes_encrypted) : null,
+            existingInfo: p.existing_info_encrypted ? decrypt(p.existing_info_encrypted) : null,
+            createdAt: p.created_at,
+            documents: docs.map(d => d.file_name)
           });
         }
       }
 
-      if (extractedCasesData.length === 0) {
-        res.status(404).json({ error: 'None of the requested cases were found.' });
+      if (extractedData.length === 0) {
+        res.status(404).json({ error: 'None of the requested patients were found or authorized.' });
         return;
       }
 
@@ -71,47 +71,54 @@ export class ExtractionController {
         action: 'DATA_EXTRACTION',
         ip_address: ip,
         user_agent: userAgent,
-        details: `Extracted ${extractedCasesData.length} records in ${targetFormat} format. Cases: ${caseIds.join(', ')}`,
+        details: `Extracted ${extractedData.length} patient records in ${targetFormat} format. Patients: ${patientIds.join(', ')}`,
         created_at: now
       });
 
-      logSecurityEvent(req.user.id, 'DATA_EXTRACTION', `Extracted ${extractedCasesData.length} records in ${targetFormat} format.`, ip, userAgent);
+      logSecurityEvent(req.user.id, 'DATA_EXTRACTION', `Extracted ${extractedData.length} patient records in ${targetFormat} format.`, ip, userAgent);
 
       // Generate the payload based on format
       let payload: any = null;
       let contentType = 'application/json';
-      let fileName = `isiqalo_extract_${Date.now()}`;
+      let fileName = `isiqalo_pacs_extract_${Date.now()}`;
 
       if (targetFormat === 'JSON') {
-        payload = JSON.stringify(extractedCasesData, null, 2);
+        payload = JSON.stringify(extractedData, null, 2);
         contentType = 'application/json';
         fileName += '.json';
       } else if (targetFormat === 'CSV') {
-        const headers = 'Case ID,Title,Category,Institution,Summary,Tags,Date Created\n';
-        const rows = extractedCasesData.map(c => 
-          `"${c.id}","${c.title.replace(/"/g, '""')}","${c.category.replace(/"/g, '""')}","${c.institution.replace(/"/g, '""')}","${c.summary.replace(/"/g, '""')}","${c.tags.replace(/"/g, '""')}","${c.createdAt}"`
+        const headers = 'Patient ID,Organisation,Facility Type,Medicine Category,Priority,Suffering From,Treatment Name,Documents Count,Date Created\n';
+        const rows = extractedData.map(p => 
+          `"${p.id}","${p.organisationName.replace(/"/g, '""')}","${p.facilityType}","${p.medicineType}","${p.isPriority}","${p.sufferingFrom.replace(/"/g, '""')}","${p.treatmentName.replace(/"/g, '""')}","${p.documents.length}","${p.createdAt}"`
         ).join('\n');
         payload = headers + rows;
         contentType = 'text/csv';
         fileName += '.csv';
       } else {
-        // PDF & ZIP Mock downloads (return a mock file buffer with summary details)
+        // PDF & ZIP Mock downloads
         payload = JSON.stringify({
-          info: `Mock ${targetFormat} binary generation for medical compliance.`,
-          totalRecords: extractedCasesData.length,
-          generatedAt: now,
-          records: extractedCasesData
+          info: `Mock ${targetFormat} binary generation for PACS.`,
+          recordsExtracted: extractedData.length,
+          data: extractedData
         }, null, 2);
-        contentType = 'application/json';
-        fileName += '.json';
+        
+        if (targetFormat === 'PDF') {
+          contentType = 'application/pdf';
+          fileName += '.pdf';
+        } else {
+          contentType = 'application/zip';
+          fileName += '.zip';
+        }
       }
 
+      const buffer = Buffer.from(payload);
+
       res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-      res.status(200).send(payload);
+      res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+      res.status(200).send(buffer);
     } catch (error) {
-      console.error('Data extraction error:', error);
-      res.status(500).json({ error: 'Internal server error during data extraction.' });
+      console.error('Extraction error:', error);
+      res.status(500).json({ error: 'Internal server error performing data extraction.' });
     }
   }
 
@@ -121,11 +128,12 @@ export class ExtractionController {
         res.status(401).json({ error: 'Unauthorized' });
         return;
       }
-
-      const history = await ExtractionRepository.getExtractionsByUserId(req.user.id);
-      res.status(200).json(history);
+      
+      const extractions = await ExtractionRepository.getExtractionsByUserId(req.user.id);
+      res.status(200).json(extractions);
     } catch (error) {
-      res.status(500).json({ error: 'Internal server error retrieving history.' });
+      console.error('Fetch extraction history error:', error);
+      res.status(500).json({ error: 'Internal server error retrieving extraction history.' });
     }
   }
 }

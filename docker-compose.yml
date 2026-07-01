@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  minio:
+    image: minio/minio
+    container_name: isiqalo_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: "isiqalo_admin"
+      MINIO_ROOT_PASSWORD: "isiqalo_password_123!"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+  
+  # MinIO client to automatically provision a bucket
+  createbuckets:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 isiqalo_admin isiqalo_password_123!;
+      /usr/bin/mc mb myminio/isiqalo-pacs-files;
+      /usr/bin/mc anonymous set private myminio/isiqalo-pacs-files;
+      exit 0;
+      "
+
+volumes:
+  minio_data:
