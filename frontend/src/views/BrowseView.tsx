@@ -31,6 +31,60 @@ interface Document {
   uploadedAt: string;
 }
 
+const DocumentItem = ({ doc, patientId }: { doc: Document; patientId: string }) => {
+  const [url, setUrl] = useState<string | null>(null);
+  const isImage = ['png', 'jpg', 'jpeg', 'webp'].includes(doc.fileType.toLowerCase());
+
+  useEffect(() => {
+    if (isImage) {
+      apiRequest(`/patients/${patientId}/documents/${doc.id}/url`, 'GET')
+        .then(res => {
+          if (res && res.url) setUrl(res.url);
+        })
+        .catch(console.error);
+    }
+  }, [doc.id, patientId, isImage]);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--input-bg)', padding: '1rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ padding: '0.75rem', background: 'rgba(37, 99, 235, 0.1)', color: 'var(--primary)', borderRadius: 'var(--radius)' }}>
+            <Download size={20} />
+          </div>
+          <div>
+            <p style={{ fontWeight: '600' }}>{doc.fileName}</p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{(doc.fileSize / (1024 * 1024)).toFixed(2)} MB • {doc.fileType.toUpperCase()}</p>
+          </div>
+        </div>
+        <button 
+          className="btn btn-outline" 
+          style={{ fontSize: '0.85rem' }}
+          onClick={async () => {
+            if (!url) {
+              try {
+                const res = await apiRequest(`/patients/${patientId}/documents/${doc.id}/url`, 'GET');
+                if (res && res.url) window.open(res.url, '_blank');
+              } catch (e) {
+                console.error(e);
+              }
+            } else {
+              window.open(url, '_blank');
+            }
+          }}
+        >
+          Download
+        </button>
+      </div>
+      {isImage && url && (
+        <div style={{ marginTop: '1rem', textAlign: 'center', background: 'var(--background)', padding: '0.5rem', borderRadius: 'var(--radius)' }}>
+          <img src={url} alt={doc.fileName} style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: 'var(--radius)' }} />
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function BrowseView() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -169,18 +223,7 @@ export default function BrowseView() {
           ) : patientDocs.length > 0 ? (
             <div style={{ display: 'grid', gap: '1rem' }}>
               {patientDocs.map(doc => (
-                <div key={doc.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--input-bg)', padding: '1rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <div style={{ padding: '0.75rem', background: 'rgba(37, 99, 235, 0.1)', color: 'var(--primary)', borderRadius: 'var(--radius)' }}>
-                      <Download size={20} />
-                    </div>
-                    <div>
-                      <p style={{ fontWeight: '600' }}>{doc.fileName}</p>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{(doc.fileSize / (1024 * 1024)).toFixed(2)} MB • {doc.fileType.toUpperCase()}</p>
-                    </div>
-                  </div>
-                  <button className="btn btn-outline" style={{ fontSize: '0.85rem' }}>Download (Mock)</button>
-                </div>
+                <DocumentItem key={doc.id} doc={doc} patientId={selectedPatient.id} />
               ))}
             </div>
           ) : (

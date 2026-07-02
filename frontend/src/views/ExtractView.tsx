@@ -219,7 +219,7 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
                 >
                   <option value="JSON">JSON Data</option>
                   <option value="CSV">CSV Spreadsheet</option>
-                  <option value="PDF">PDF Report (Mock)</option>
+                  <option value="PDF">PDF Report</option>
                   <option value="ZIP">ZIP Archive (Mock)</option>
                 </select>
 

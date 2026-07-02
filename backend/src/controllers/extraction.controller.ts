@@ -4,6 +4,7 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { PatientRepository, ExtractionRepository, AuditLogRepository, DocumentRepository } from '../repositories/database.repositories';
 import { decrypt } from '../services/encryption';
 import { logSecurityEvent } from '../config/logger';
+import PDFDocument from 'pdfkit';
 
 export class ExtractionController {
   static async extractCases(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -54,7 +55,7 @@ export class ExtractionController {
             treatmentNotes: p.treatment_notes_encrypted ? decrypt(p.treatment_notes_encrypted) : null,
             existingInfo: p.existing_info_encrypted ? decrypt(p.existing_info_encrypted) : null,
             createdAt: p.created_at,
-            documents: docs.map(d => d.file_name)
+            documents: docs.map(d => ({ name: d.file_name, type: d.file_type }))
           });
         }
       }
@@ -89,26 +90,52 @@ export class ExtractionController {
       } else if (targetFormat === 'CSV') {
         const headers = 'Patient ID,Organisation,Facility Type,Medicine Category,Priority,Suffering From,Treatment Name,Documents Count,Date Created\n';
         const rows = extractedData.map(p => 
-          `"${p.id}","${p.organisationName.replace(/"/g, '""')}","${p.facilityType}","${p.medicineType}","${p.isPriority}","${p.sufferingFrom.replace(/"/g, '""')}","${p.treatmentName.replace(/"/g, '""')}","${p.documents.length}","${p.createdAt}"`
+          `"${p.id}","${p.organisationName?.replace(/"/g, '""')}","${p.facilityType}","${p.medicineType}","${p.isPriority}","${p.sufferingFrom?.replace(/"/g, '""')}","${p.treatmentName?.replace(/"/g, '""')}","${p.documents.length}","${p.createdAt}"`
         ).join('\n');
         payload = headers + rows;
         contentType = 'text/csv';
         fileName += '.csv';
+      } else if (targetFormat === 'PDF') {
+        const doc = new PDFDocument();
+        const chunks: any[] = [];
+        
+        doc.on('data', chunk => chunks.push(chunk));
+        doc.on('end', () => {
+          const resultBuffer = Buffer.concat(chunks);
+          res.setHeader('Content-Type', 'application/pdf');
+          res.setHeader('Content-Disposition', `attachment; filename=${fileName}.pdf`);
+          res.status(200).send(resultBuffer);
+        });
+
+        doc.fontSize(20).text('ISIQALO MED - Patient Extraction Report', { align: 'center' });
+        doc.moveDown(2);
+
+        for (const p of extractedData) {
+          doc.fontSize(16).text(`Patient ID: ${p.id}`, { underline: true });
+          doc.fontSize(12).text(`Organisation: ${p.organisationName}`);
+          doc.text(`Condition: ${p.sufferingFrom}`);
+          doc.text(`Treatment: ${p.treatmentName}`);
+          if (p.treatmentNotes) doc.text(`Notes: ${p.treatmentNotes}`);
+          
+          if (p.documents.length > 0) {
+            doc.moveDown(0.5);
+            doc.text(`Attached Documents: ${p.documents.map((d: any) => d.name).join(', ')}`);
+          }
+          doc.moveDown(1.5);
+        }
+
+        doc.end();
+        return; // Response handled in 'end' event
       } else {
-        // PDF & ZIP Mock downloads
+        // ZIP Mock downloads
         payload = JSON.stringify({
           info: `Mock ${targetFormat} binary generation for PACS.`,
           recordsExtracted: extractedData.length,
           data: extractedData
         }, null, 2);
         
-        if (targetFormat === 'PDF') {
-          contentType = 'application/pdf';
-          fileName += '.pdf';
-        } else {
-          contentType = 'application/zip';
-          fileName += '.zip';
-        }
+        contentType = 'application/zip';
+        fileName += '.zip';
       }
 
       const buffer = Buffer.from(payload);

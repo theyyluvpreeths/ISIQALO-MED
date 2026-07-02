@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import multerS3 from 'multer-s3';
-import { S3Client } from '@aws-sdk/client-s3';
+import fs from 'fs';
 import path from 'path';
 import { AuthController } from '../controllers/auth.controller';
 import { PatientController } from '../controllers/patient.controller';
@@ -17,25 +16,17 @@ const router = Router();
 // Apply general rate limiting to all API routes
 router.use(generalLimiter);
 
-// Configure S3 Client for MinIO container
-const s3 = new S3Client({
-  endpoint: 'http://localhost:9000',
-  region: 'us-east-1',
-  credentials: {
-    accessKeyId: 'isiqalo_admin',
-    secretAccessKey: 'isiqalo_password_123!'
-  },
-  forcePathStyle: true // needed for minio
-});
+const tempDir = path.join(__dirname, '../../temp');
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+}
 
 const upload = multer({
-  storage: multerS3({
-    s3: s3,
-    bucket: 'isiqalo-pacs-files',
-    metadata: function (req, file, cb) {
-      cb(null, { fieldName: file.fieldname });
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, tempDir);
     },
-    key: function (req, file, cb) {
+    filename: function (req, file, cb) {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
       cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
@@ -76,6 +67,7 @@ router.get('/patients', demoAuth as any, PatientController.getPatients as any);
 // Patient Specific Routes - guarded by authorizePatientAccess
 router.get('/patients/:id', demoAuth as any, authorizePatientAccess as any, PatientController.getPatientById as any);
 router.post('/patients/:id/documents', demoAuth as any, authorizePatientAccess as any, upload.single('file'), PatientController.uploadDocument as any);
+router.get('/patients/:id/documents/:docId/url', demoAuth as any, authorizePatientAccess as any, PatientController.getDocumentUrl as any);
 
 // Data Extraction & Reporting routes
 router.post('/extract', demoAuth as any, extractionLimiter, ExtractionController.extractCases as any);

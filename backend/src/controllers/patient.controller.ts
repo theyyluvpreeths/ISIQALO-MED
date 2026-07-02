@@ -4,6 +4,12 @@ import { AuthenticatedRequest } from '../middleware/auth.middleware';
 import { PatientRepository, DocumentRepository, AuditLogRepository, PatientEntity } from '../repositories/database.repositories';
 import { encrypt, decrypt } from '../services/encryption';
 import { logSecurityEvent } from '../config/logger';
+import fs from 'fs';
+import { BlobServiceClient, BlobSASPermissions } from '@azure/storage-blob';
+
+const AZURE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || "UseDevelopmentStorage=true";
+const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_CONNECTION_STRING);
+const CONTAINER_NAME = 'isiqalo-pacs-files';
 
 export class PatientController {
   static async createPatient(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -97,6 +103,12 @@ export class PatientController {
       
       const fileExt = file.originalname.split('.').pop() || 'unknown';
 
+      const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
+      await containerClient.createIfNotExists();
+      const blockBlobClient = containerClient.getBlockBlobClient(file.filename);
+      await blockBlobClient.uploadFile(file.path);
+      await fs.promises.unlink(file.path);
+
       await DocumentRepository.createDocument({
         id: docId,
         patient_id: patientId,
@@ -104,7 +116,7 @@ export class PatientController {
         file_name: file.originalname,
         file_type: fileExt,
         file_size: file.size,
-        file_path_encrypted: encrypt(file.path),
+        file_path_encrypted: encrypt(file.filename),
         uploaded_at: now
       });
 
@@ -122,6 +134,50 @@ export class PatientController {
     } catch (error) {
       console.error('Upload document error:', error);
       res.status(500).json({ error: 'Internal server error uploading document.' });
+    }
+  }
+
+  static async getDocumentUrl(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+      const { id, docId } = req.params;
+      
+      const docs = await DocumentRepository.getDocumentsByPatientId(id);
+      const doc = docs.find(d => d.id === docId);
+      
+      if (!doc) {
+        res.status(404).json({ error: 'Document not found' });
+        return;
+      }
+      
+      const fileKey = PatientController.safeDecrypt(doc.file_path_encrypted);
+      if (!fileKey) {
+        res.status(500).json({ error: 'Failed to decrypt document path' });
+        return;
+      }
+      
+      const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
+      const blockBlobClient = containerClient.getBlockBlobClient(fileKey);
+      
+      const startsOn = new Date();
+      const expiresOn = new Date(startsOn.valueOf() + 3600 * 1000); // 1 hour
+      
+      const permissions = new BlobSASPermissions();
+      permissions.read = true;
+      
+      const url = await blockBlobClient.generateSasUrl({
+        permissions,
+        startsOn,
+        expiresOn
+      });
+      
+      res.status(200).json({ url });
+    } catch (error) {
+      console.error('Fetch document URL error:', error);
+      res.status(500).json({ error: 'Internal server error retrieving document URL.' });
     }
   }
 
