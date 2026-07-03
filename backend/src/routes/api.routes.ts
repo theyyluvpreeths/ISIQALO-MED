@@ -6,6 +6,7 @@ import { AuthController } from '../controllers/auth.controller';
 import { PatientController } from '../controllers/patient.controller';
 import { ExtractionController } from '../controllers/extraction.controller';
 import { SettingsController } from '../controllers/settings.controller';
+import { ChatController } from '../controllers/chat.controller';
 import { demoAuth } from '../middleware/demo-auth.middleware';
 import { authorizePatientAccess } from '../middleware/patient-access.middleware';
 import { validate, registerSchema, loginSchema, settingsUpdateSchema } from '../middleware/validator.middleware';
@@ -66,8 +67,17 @@ router.get('/patients', demoAuth as any, PatientController.getPatients as any);
 
 // Patient Specific Routes - guarded by authorizePatientAccess
 router.get('/patients/:id', demoAuth as any, authorizePatientAccess as any, PatientController.getPatientById as any);
-router.post('/patients/:id/documents', demoAuth as any, authorizePatientAccess as any, upload.single('file'), PatientController.uploadDocument as any);
+router.put('/patients/:id', demoAuth as any, authorizePatientAccess as any, PatientController.updatePatient as any);
+router.delete('/patients/:id', demoAuth as any, authorizePatientAccess as any, PatientController.deletePatient as any);
+router.post('/patients/:id/documents', demoAuth as any, authorizePatientAccess as any, upload.array('files', 10), PatientController.uploadDocument as any);
 router.get('/patients/:id/documents/:docId/url', demoAuth as any, authorizePatientAccess as any, PatientController.getDocumentUrl as any);
+router.get('/patients/:id/comments', demoAuth as any, authorizePatientAccess as any, PatientController.getComments as any);
+router.post('/patients/:id/comments', demoAuth as any, authorizePatientAccess as any, PatientController.addComment as any);
+
+// Private Chats Routes
+router.get('/chats/users', demoAuth as any, ChatController.getChatUsers as any);
+router.get('/chats/:userId', demoAuth as any, ChatController.getMessages as any);
+router.post('/chats/:userId', demoAuth as any, ChatController.sendMessage as any);
 
 // Data Extraction & Reporting routes
 router.post('/extract', demoAuth as any, extractionLimiter, ExtractionController.extractCases as any);

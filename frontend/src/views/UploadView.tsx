@@ -30,8 +30,8 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
   const [patientMedicalAid, setPatientMedicalAid] = useState('');
   const [patientMedicalAidNumber, setPatientMedicalAidNumber] = useState('');
 
-  // File upload (We will upload one or multiple, let's stick to one heavy file for this view for simplicity)
-  const [file, setFile] = useState<File | null>(null);
+  // File upload (Support for multiple heavy files)
+  const [files, setFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
   
   const [loading, setLoading] = useState(false);
@@ -57,24 +57,32 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
     e.stopPropagation();
     setDragActive(false);
     
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      validateAndSetFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      validateAndAddFiles(Array.from(e.dataTransfer.files));
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      validateAndSetFile(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      validateAndAddFiles(Array.from(e.target.files));
     }
   };
 
-  const validateAndSetFile = (selectedFile: File) => {
+  const validateAndAddFiles = (selectedFiles: File[]) => {
     const allowedExtensions = /\.(stl|dcm|xray|pdf|txt|png|jpeg|jpg|webp)$/i;
-    if (!allowedExtensions.test(selectedFile.name)) {
-      showToast('Unsupported format. Allowed: STL, DCM, XRAY, PDF, TXT, images.', 'error');
-      return;
+    const validFiles: File[] = [];
+    
+    for (const f of selectedFiles) {
+      if (!allowedExtensions.test(f.name)) {
+        showToast(`Unsupported format: ${f.name}. Allowed: STL, DCM, XRAY, PDF, TXT, images.`, 'error');
+      } else {
+        validFiles.push(f);
+      }
     }
-    setFile(selectedFile);
+    
+    if (validFiles.length > 0) {
+      setFiles(prev => [...prev, ...validFiles].slice(0, 10)); // Limit to max 10 files
+    }
   };
 
   const handleUploadSubmit = async (e: React.FormEvent) => {
@@ -114,9 +122,9 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
       const newPatientId = patientRes.patientId;
 
       // 2. Upload Document if exists
-      if (file) {
+      if (files.length > 0) {
         const formData = new FormData();
-        formData.append('file', file);
+        files.forEach(f => formData.append('files', f));
         await apiRequest(`/patients/${newPatientId}/documents`, 'POST', formData, true);
       }
 
@@ -147,7 +155,7 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
     setPatientContact('');
     setPatientMedicalAid('');
     setPatientMedicalAidNumber('');
-    setFile(null);
+    setFiles([]);
   };
 
   const copyToClipboard = () => {
@@ -241,6 +249,17 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
             <div className="form-group">
               <label className="form-label">Contact Details</label>
               <input type="text" className="form-input" value={patientContact} onChange={(e) => setPatientContact(e.target.value)} />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Medical Aid Provider</label>
+              <input type="text" className="form-input" placeholder="e.g. Discovery Health" value={patientMedicalAid} onChange={(e) => setPatientMedicalAid(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Medical Aid Number</label>
+              <input type="text" className="form-input" value={patientMedicalAidNumber} onChange={(e) => setPatientMedicalAidNumber(e.target.value)} />
             </div>
           </div>
         </div>
@@ -358,27 +377,42 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
               onChange={handleFileChange} 
               style={{ display: 'none' }}
               accept=".pdf,.txt,.png,.jpeg,.jpg,.webp,.stl,.dcm,.xray"
+              multiple
             />
             
-            {file ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(37, 99, 235, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Paperclip size={24} />
-                </div>
-                <div>
-                  <p style={{ fontWeight: '600', color: 'var(--foreground)', marginBottom: '0.25rem' }}>{file.name}</p>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+            {files.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', alignItems: 'center' }}>
+                <p style={{ fontWeight: '600', marginBottom: '0.5rem' }}>{files.length} File(s) Selected</p>
+                <div style={{ display: 'grid', gap: '0.5rem', width: '100%', maxWidth: '400px' }}>
+                  {files.map((f, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '0.5rem 1rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+                        <Paperclip size={16} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                        <span style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
+                      </div>
+                      <button 
+                        type="button"
+                        style={{ background: 'none', border: 'none', color: 'var(--destructive)', cursor: 'pointer', display: 'flex', padding: '0.2rem' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFiles(prev => prev.filter((_, i) => i !== idx));
+                        }}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
                 <button 
                   type="button"
                   className="btn btn-outline" 
-                  style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem', marginTop: '0.5rem' }}
+                  style={{ marginTop: '0.5rem' }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setFile(null);
+                    fileInputRef.current?.click();
                   }}
                 >
-                  <X size={14} /> Remove File
+                  + Add More Files
                 </button>
               </div>
             ) : (
@@ -386,10 +420,10 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
                 <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(37, 99, 235, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
                   <Upload size={28} />
                 </div>
-                <p style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Click or drag a file here to upload</p>
+                <p style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '0.5rem' }}>Click or drag files here to upload</p>
                 <p style={{ fontSize: '0.9rem', color: 'var(--muted-foreground)' }}>
                   Supported formats: STL, DCM, XRAY, PDF, Images<br/>
-                  Maximum size: 1GB
+                  Maximum size: 1GB per file (Max 10 files)
                 </p>
               </>
             )}

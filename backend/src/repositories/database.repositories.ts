@@ -35,6 +35,8 @@ export interface PatientEntity {
   contact_encrypted: string | null;
   medical_aid: string | null;
   medical_aid_number_encrypted: string | null;
+  views_count: number;
+  downloads_count: number;
   created_at: string;
 }
 
@@ -67,10 +69,27 @@ export interface AuditLogEntity {
   created_at: string;
 }
 
+export interface CaseCommentEntity {
+  id: string;
+  patient_id: string;
+  doctor_id: string;
+  content: string;
+  created_at: string;
+}
+
+export interface PrivateMessageEntity {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  is_read: number;
+  created_at: string;
+}
+
 export class UserRepository {
   static async createUser(user: UserEntity): Promise<void> {
     const query = `
-      INSERT INTO auth.users (
+      INSERT INTO auth_users (
         id, email, password_hash, first_name, last_name, role,
         hpcsa_number, speciality, practice_name, practice_number,
         subscription_plan, subscription_status, created_at, updated_at
@@ -84,11 +103,11 @@ export class UserRepository {
   }
 
   static async getUserById(id: string): Promise<UserEntity | null> {
-    return await dbGet('SELECT * FROM auth.users WHERE id = ?', [id]);
+    return await dbGet('SELECT * FROM auth_users WHERE id = ?', [id]);
   }
 
   static async getUserByEmail(email: string): Promise<UserEntity | null> {
-    return await dbGet('SELECT * FROM auth.users WHERE email = ?', [email]);
+    return await dbGet('SELECT * FROM auth_users WHERE email = ?', [email]);
   }
 
   static async updateUser(id: string, updates: Partial<Omit<UserEntity, 'id' | 'created_at'>>): Promise<void> {
@@ -99,7 +118,7 @@ export class UserRepository {
     const params = fields.map(field => (updates as any)[field]);
     params.push(id);
 
-    await dbRun(`UPDATE auth.users SET ${setClause}, updated_at = ? WHERE id = ?`, [
+    await dbRun(`UPDATE auth_users SET ${setClause}, updated_at = ? WHERE id = ?`, [
       ...params.slice(0, -1),
       new Date().toISOString(),
       id
@@ -110,7 +129,7 @@ export class UserRepository {
 export class PatientRepository {
   static async createPatient(patient: PatientEntity, doctorId: string): Promise<void> {
     const query = `
-      INSERT INTO pacs.patients (
+      INSERT INTO pacs_patients (
         id, organisation_name, facility_type, medicine_type, is_priority, suffering_from,
         treatment_name, treatment_notes_encrypted, existing_info_encrypted,
         first_name_encrypted, last_name_encrypted, id_number_encrypted, dob, gender,
@@ -126,27 +145,32 @@ export class PatientRepository {
     ]);
 
     // Map doctor to patient
-    await dbRun(`INSERT INTO pacs.patient_doctors (patient_id, doctor_id, assigned_at) VALUES (?, ?, ?)`, [
+    await dbRun(`INSERT INTO pacs_patient_doctors (patient_id, doctor_id, assigned_at) VALUES (?, ?, ?)`, [
       patient.id, doctorId, patient.created_at
     ]);
   }
 
   static async getPatientById(id: string): Promise<PatientEntity | null> {
-    return await dbGet('SELECT * FROM pacs.patients WHERE id = ?', [id]);
+    return await dbGet('SELECT * FROM pacs_patients WHERE id = ?', [id]);
   }
 
   static async getPatientsForDoctor(doctorId: string): Promise<PatientEntity[]> {
     const query = `
-      SELECT p.* FROM pacs.patients p
-      INNER JOIN pacs.patient_doctors pd ON p.id = pd.patient_id
+      SELECT p.* FROM pacs_patients p
+      INNER JOIN pacs_patient_doctors pd ON p.id = pd.patient_id
       WHERE pd.doctor_id = ?
       ORDER BY p.is_priority DESC, p.created_at DESC
     `;
     return await dbAll(query, [doctorId]);
   }
 
+  static async getAllPatients(): Promise<PatientEntity[]> {
+    const query = `SELECT * FROM pacs_patients ORDER BY is_priority DESC, created_at DESC`;
+    return await dbAll(query);
+  }
+
   static async isDoctorAssignedToPatient(doctorId: string, patientId: string): Promise<boolean> {
-    const result = await dbGet('SELECT 1 FROM pacs.patient_doctors WHERE doctor_id = ? AND patient_id = ?', [doctorId, patientId]);
+    const result = await dbGet('SELECT 1 FROM pacs_patient_doctors WHERE doctor_id = ? AND patient_id = ?', [doctorId, patientId]);
     return !!result;
   }
   
@@ -158,14 +182,26 @@ export class PatientRepository {
     const params = fields.map(field => (updates as any)[field]);
     params.push(id);
 
-    await dbRun(`UPDATE pacs.patients SET ${setClause} WHERE id = ?`, params);
+    await dbRun(`UPDATE pacs_patients SET ${setClause} WHERE id = ?`, params);
+  }
+
+  static async deletePatient(id: string): Promise<void> {
+    await dbRun('DELETE FROM pacs_patients WHERE id = ?', [id]);
+  }
+
+  static async incrementViews(id: string): Promise<void> {
+    await dbRun('UPDATE pacs_patients SET views_count = views_count + 1 WHERE id = ?', [id]);
+  }
+
+  static async incrementDownloads(id: string): Promise<void> {
+    await dbRun('UPDATE pacs_patients SET downloads_count = downloads_count + 1 WHERE id = ?', [id]);
   }
 }
 
 export class DocumentRepository {
   static async createDocument(doc: PatientDocumentEntity): Promise<void> {
     const query = `
-      INSERT INTO pacs.patient_documents (
+      INSERT INTO pacs_patient_documents (
         id, patient_id, uploaded_by_doctor_id, file_name, file_type, file_size, file_path_encrypted, uploaded_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
@@ -175,7 +211,7 @@ export class DocumentRepository {
   }
 
   static async getDocumentsByPatientId(patientId: string): Promise<PatientDocumentEntity[]> {
-    return await dbAll('SELECT * FROM pacs.patient_documents WHERE patient_id = ? ORDER BY uploaded_at DESC', [patientId]);
+    return await dbAll('SELECT * FROM pacs_patient_documents WHERE patient_id = ? ORDER BY uploaded_at DESC', [patientId]);
   }
 }
 
@@ -189,7 +225,7 @@ export class ExtractionRepository {
 export class AuditLogRepository {
   static async createAuditLog(log: AuditLogEntity): Promise<void> {
     const query = `
-      INSERT INTO audit.logs (id, user_id, action, ip_address, user_agent, details, created_at)
+      INSERT INTO audit_logs (id, user_id, action, ip_address, user_agent, details, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
     await dbRun(query, [
@@ -199,10 +235,63 @@ export class AuditLogRepository {
   }
 
   static async getAuditLogsByUserId(userId: string): Promise<AuditLogEntity[]> {
-    return await dbAll('SELECT * FROM audit.logs WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+    return await dbAll('SELECT * FROM audit_logs WHERE user_id = ? ORDER BY created_at DESC', [userId]);
   }
 
   static async getAllAuditLogs(): Promise<AuditLogEntity[]> {
-    return await dbAll('SELECT TOP 100 * FROM audit.logs ORDER BY created_at DESC');
+    return await dbAll('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 100');
+  }
+}
+
+export class CaseCommentRepository {
+  static async createComment(comment: CaseCommentEntity): Promise<void> {
+    const query = `INSERT INTO pacs_case_comments (id, patient_id, doctor_id, content, created_at) VALUES (?, ?, ?, ?, ?)`;
+    await dbRun(query, [comment.id, comment.patient_id, comment.doctor_id, comment.content, comment.created_at]);
+  }
+
+  static async getCommentsByPatientId(patientId: string): Promise<any[]> {
+    const query = `
+      SELECT c.*, u.first_name, u.last_name, u.role
+      FROM pacs_case_comments c
+      INNER JOIN auth_users u ON c.doctor_id = u.id
+      WHERE c.patient_id = ?
+      ORDER BY c.created_at ASC
+    `;
+    return await dbAll(query, [patientId]);
+  }
+}
+
+export class ChatRepository {
+  static async createMessage(message: PrivateMessageEntity): Promise<void> {
+    const query = `INSERT INTO private_messages (id, sender_id, receiver_id, content, is_read, created_at) VALUES (?, ?, ?, ?, ?, ?)`;
+    await dbRun(query, [message.id, message.sender_id, message.receiver_id, message.content, message.is_read, message.created_at]);
+  }
+
+  static async getMessagesBetweenUsers(user1Id: string, user2Id: string): Promise<PrivateMessageEntity[]> {
+    const query = `
+      SELECT m.*, s.first_name as sender_first_name, s.last_name as sender_last_name
+      FROM private_messages m
+      INNER JOIN auth_users s ON m.sender_id = s.id
+      WHERE (m.sender_id = ? AND m.receiver_id = ?) OR (m.sender_id = ? AND m.receiver_id = ?)
+      ORDER BY m.created_at ASC
+    `;
+    return await dbAll(query, [user1Id, user2Id, user2Id, user1Id]);
+  }
+
+  static async getAllUsersForChat(): Promise<any[]> {
+    return await dbAll('SELECT id, first_name, last_name, role, email FROM auth_users ORDER BY first_name ASC');
+  }
+
+  static async getAllMessagesAdmin(): Promise<any[]> {
+    const query = `
+      SELECT m.*, 
+             s.first_name as sender_first_name, s.last_name as sender_last_name,
+             r.first_name as receiver_first_name, r.last_name as receiver_last_name
+      FROM private_messages m
+      INNER JOIN auth_users s ON m.sender_id = s.id
+      INNER JOIN auth_users r ON m.receiver_id = r.id
+      ORDER BY m.created_at DESC LIMIT 500
+    `;
+    return await dbAll(query);
   }
 }

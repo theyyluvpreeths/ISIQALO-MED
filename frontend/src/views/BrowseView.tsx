@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiRequest } from '../utils/api';
-import { Search, Eye, AlertTriangle, ShieldCheck, User, Calendar, X, Building, Download, Paperclip } from 'lucide-react';
+import { Search, Eye, AlertTriangle, ShieldCheck, User, Calendar, X, Building, Download, Paperclip, MessageSquare, Send } from 'lucide-react';
 
 interface Patient {
   id: string;
@@ -29,6 +29,15 @@ interface Document {
   fileType: string;
   fileSize: number;
   uploadedAt: string;
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  created_at: string;
 }
 
 const DocumentItem = ({ doc, patientId }: { doc: Document; patientId: string }) => {
@@ -93,6 +102,8 @@ export default function BrowseView() {
   // Single Patient View
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [patientDocs, setPatientDocs] = useState<Document[]>([]);
+  const [patientComments, setPatientComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState('');
   const [detailsLoading, setDetailsLoading] = useState(false);
 
   useEffect(() => {
@@ -119,6 +130,8 @@ export default function BrowseView() {
     try {
       const data = await apiRequest(`/patients/${patient.id}`, 'GET');
       setPatientDocs(data.documents || []);
+      const comments = await apiRequest(`/patients/${patient.id}/comments`, 'GET');
+      setPatientComments(comments || []);
     } catch (err) {
       console.error('Failed to fetch patient details', err);
     } finally {
@@ -129,6 +142,21 @@ export default function BrowseView() {
   const closeDetails = () => {
     setSelectedPatient(null);
     setPatientDocs([]);
+    setPatientComments([]);
+    setNewComment('');
+  };
+
+  const handlePostComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !selectedPatient) return;
+    try {
+      await apiRequest(`/patients/${selectedPatient.id}/comments`, 'POST', { content: newComment });
+      setNewComment('');
+      const comments = await apiRequest(`/patients/${selectedPatient.id}/comments`, 'GET');
+      setPatientComments(comments || []);
+    } catch (err) {
+      console.error('Failed to post comment', err);
+    }
   };
 
   const filteredPatients = patients.filter(p => {
@@ -231,6 +259,41 @@ export default function BrowseView() {
               <p style={{ color: 'var(--muted-foreground)' }}>No heavy documents attached to this patient yet.</p>
             </div>
           )}
+        </div>
+
+        {/* Case Discussions */}
+        <div style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid var(--border)' }}>
+          <h3 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <MessageSquare size={20} style={{ color: 'var(--primary)' }} /> Case Discussion
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+            {patientComments.length === 0 ? (
+              <p style={{ color: 'var(--muted-foreground)', fontStyle: 'italic' }}>No discussion on this case yet.</p>
+            ) : (
+              patientComments.map(c => (
+                <div key={c.id} style={{ background: 'var(--input-bg)', padding: '1rem', borderRadius: 'var(--radius)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: '600', color: 'var(--foreground)' }}>Dr. {c.first_name} {c.last_name}</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{new Date(c.created_at).toLocaleString()}</span>
+                  </div>
+                  <p style={{ color: 'var(--foreground)', lineHeight: '1.5' }}>{c.content}</p>
+                </div>
+              ))
+            )}
+          </div>
+          <form onSubmit={handlePostComment} style={{ display: 'flex', gap: '1rem' }}>
+            <input 
+              type="text" 
+              className="form-input" 
+              style={{ flex: 1 }} 
+              placeholder="Add your medical opinion or question..." 
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
+            />
+            <button type="submit" className="btn btn-primary" disabled={!newComment.trim()}>
+              <Send size={16} /> Post
+            </button>
+          </form>
         </div>
       </div>
     );

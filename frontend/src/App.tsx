@@ -3,6 +3,8 @@ import DashboardView from './views/DashboardView';
 import UploadView from './views/UploadView';
 import ExtractView from './views/ExtractView';
 import BrowseView from './views/BrowseView';
+import ManageCasesView from './views/ManageCasesView';
+import MessagesView from './views/MessagesView';
 import SettingsView from './views/SettingsView';
 import { 
   Shield, 
@@ -12,7 +14,8 @@ import {
   BookOpen, 
   Settings as SettingsIcon, 
   Bell, 
-  ShieldCheck
+  ShieldCheck,
+  MessageSquare
 } from 'lucide-react';
 
 // Demo practitioner user — no login required
@@ -50,6 +53,8 @@ export default function App() {
       case 'upload': return 'Clinical Record Upload';
       case 'extract': return 'Data Extraction & Reporting Console';
       case 'browse': return 'Clinical Registry Directory';
+      case 'manage': return 'Manage Cases';
+      case 'messages': return 'Private Communications';
       case 'settings': return 'Practitioner Security & Account Settings';
       default: return 'Isiqalo Med';
     }
@@ -93,6 +98,20 @@ export default function App() {
             onClick={() => setActiveTab('browse')}
           >
             <BookOpen size={18} /> Browse Cases
+          </button>
+
+          <button 
+            className={`sidebar-item ${activeTab === 'manage' ? 'active' : ''}`}
+            onClick={() => setActiveTab('manage')}
+          >
+            <Database size={18} /> Manage Cases
+          </button>
+
+          <button 
+            className={`sidebar-item ${activeTab === 'messages' ? 'active' : ''}`}
+            onClick={() => setActiveTab('messages')}
+          >
+            <MessageSquare size={18} /> Private Chats
           </button>
 
           <button 
@@ -148,6 +167,8 @@ export default function App() {
           {activeTab === 'upload' && <UploadView onNavigate={setActiveTab} showToast={showToast} />}
           {activeTab === 'extract' && <ExtractView showToast={showToast} />}
           {activeTab === 'browse' && <BrowseView />}
+          {activeTab === 'manage' && <ManageCasesView showToast={showToast} />}
+          {activeTab === 'messages' && <MessagesView user={user} />}
           {activeTab === 'settings' && <SettingsView user={user} onUserUpdate={setUser} showToast={showToast} />}
         </div>
       </main>

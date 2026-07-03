@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { apiRequest } from '../utils/api';
 import { FileText, Download, Eye, Award, Plus, Database, ShieldAlert } from 'lucide-react';
 
-interface Case {
+interface Patient {
   id: string;
-  title: string;
-  category: string;
-  institution: string;
+  firstName: string;
+  lastName: string;
+  sufferingFrom: string;
+  organisationName: string;
   viewsCount: number;
   downloadsCount: number;
   createdAt: string;
@@ -18,15 +19,15 @@ interface DashboardViewProps {
 }
 
 export default function DashboardView({ onNavigate, showToast }: DashboardViewProps) {
-  const [cases, setCases] = useState<Case[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [extractionsCount, setExtractionsCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const casesData = await apiRequest('/cases');
-        setCases(casesData);
+        const patientsData = await apiRequest('/patients');
+        setPatients(patientsData || []);
 
         const extractHistory = await apiRequest('/extract/history');
         setExtractionsCount(extractHistory.length);
@@ -39,7 +40,7 @@ export default function DashboardView({ onNavigate, showToast }: DashboardViewPr
     fetchData();
   }, []);
 
-  const totalViews = cases.reduce((acc, curr) => acc + curr.viewsCount, 0);
+  const totalViews = patients.reduce((acc, curr) => acc + (curr.viewsCount || 0), 0);
 
   if (loading) {
     return (
@@ -59,7 +60,7 @@ export default function DashboardView({ onNavigate, showToast }: DashboardViewPr
           </div>
           <div className="kpi-info">
             <span className="kpi-label">Cases Uploaded</span>
-            <span className="kpi-value">{cases.length}</span>
+            <span className="kpi-value">{patients.length}</span>
           </div>
         </div>
 
@@ -110,7 +111,7 @@ export default function DashboardView({ onNavigate, showToast }: DashboardViewPr
           </div>
 
           <div className="data-table-container">
-            {cases.length === 0 ? (
+            {patients.length === 0 ? (
               <p style={{ color: 'var(--muted-foreground)', padding: '2rem', textAlign: 'center' }}>
                 No clinical records logged yet. Get started by uploading a case.
               </p>
@@ -118,27 +119,27 @@ export default function DashboardView({ onNavigate, showToast }: DashboardViewPr
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Case ID</th>
-                    <th>Title</th>
-                    <th>Category</th>
+                    <th>Patient ID</th>
+                    <th>Name</th>
+                    <th>Condition</th>
                     <th>Institution</th>
                     <th>Upload Date</th>
                     <th>Stats</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {cases.slice(0, 5).map((c) => (
-                    <tr key={c.id}>
-                      <td style={{ fontWeight: '600', color: 'var(--primary)' }}>{c.id}</td>
-                      <td>{c.title}</td>
+                  {patients.slice(0, 5).map((p) => (
+                    <tr key={p.id}>
+                      <td style={{ fontWeight: '600', color: 'var(--primary)' }}>{p.id}</td>
+                      <td>{p.firstName} {p.lastName}</td>
                       <td>
-                        <span className="status-badge status-info">{c.category}</span>
+                        <span className="status-badge status-info">{p.sufferingFrom}</span>
                       </td>
-                      <td>{c.institution}</td>
-                      <td>{new Date(c.createdAt).toLocaleDateString()}</td>
+                      <td>{p.organisationName}</td>
+                      <td>{new Date(p.createdAt).toLocaleDateString()}</td>
                       <td>
                         <span style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>
-                          {c.viewsCount} views / {c.downloadsCount} downloads
+                          {p.viewsCount || 0} views / {p.downloadsCount || 0} dl
                         </span>
                       </td>
                     </tr>

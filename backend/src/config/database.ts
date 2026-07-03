@@ -1,4 +1,4 @@
-import * as sql from 'mssql';
+import sqlite3 from 'sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { logger } from './logger';
@@ -6,79 +6,71 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const dbConfig: sql.config = {
-  server: process.env.DB_SERVER || 'localhost',
-  user: process.env.DB_USER || 'sa',
-  password: process.env.DB_PASSWORD || 'password123!',
-  database: process.env.DB_DATABASE || 'isiqalo',
-  options: {
-    encrypt: process.env.DB_ENCRYPT === 'true', // Use true for Azure, false for local
-    trustServerCertificate: true, // Often needed for local development
-  },
-};
+const dbPath = process.env.DB_DATABASE_PATH || path.join(process.cwd(), 'data', 'database.sqlite');
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
 
-export let db: sql.ConnectionPool;
+export let db: sqlite3.Database;
 
 let resolveDbInit: () => void;
 export const dbInitialized = new Promise<void>((resolve) => {
   resolveDbInit = resolve;
 });
 
-async function connectToDatabase() {
-  try {
-    db = await sql.connect(dbConfig);
-    logger.info(`Connected to MSSQL database on ${dbConfig.server}`);
-    await initializeDatabase();
-  } catch (err) {
-    logger.error('Failed to connect to MSSQL database:', err);
-  }
+function connectToDatabase() {
+  db = new sqlite3.Database(dbPath, async (err) => {
+    if (err) {
+      logger.error('Failed to connect to SQLite database:', err);
+    } else {
+      logger.info(`Connected to SQLite database at ${dbPath}`);
+      db.run("PRAGMA foreign_keys = ON;");
+      await initializeDatabase();
+    }
+  });
 }
 
 connectToDatabase();
 
-function convertQuery(query: string, params: any[]) {
-  let q = query;
-  const request = new sql.Request(db);
-  for (let i = 0; i < params.length; i++) {
-    // Replace the first occurrence of '?' with '@p{i}'
-    q = q.replace('?', `@p${i}`);
-    request.input(`p${i}`, params[i]);
-  }
-  return { q, request };
-}
-
 // Helper to run queries as promises
-export async function dbRun(query: string, params: any[] = []): Promise<any> {
-  const { q, request } = convertQuery(query, params);
-  try {
-    const result = await request.query(q);
-    return { lastID: null, changes: result.rowsAffected[0] || 0 };
-  } catch (error) {
-    logger.error(`Database Error in dbRun: ${error}`);
-    throw error;
-  }
+export function dbRun(query: string, params: any[] = []): Promise<any> {
+  return new Promise((resolve, reject) => {
+    db.run(query, params, function (err) {
+      if (err) {
+        logger.error(`Database Error in dbRun: ${err}`);
+        reject(err);
+      } else {
+        resolve({ lastID: this.lastID, changes: this.changes });
+      }
+    });
+  });
 }
 
-export async function dbGet(query: string, params: any[] = []): Promise<any> {
-  const { q, request } = convertQuery(query, params);
-  try {
-    const result = await request.query(q);
-    return result.recordset[0] || null;
-  } catch (error) {
-    logger.error(`Database Error in dbGet: ${error}`);
-    throw error;
-  }
+export function dbGet(query: string, params: any[] = []): Promise<any> {
+  return new Promise((resolve, reject) => {
+    db.get(query, params, (err, row) => {
+      if (err) {
+        logger.error(`Database Error in dbGet: ${err}`);
+        reject(err);
+      } else {
+        resolve(row || null);
+      }
+    });
+  });
 }
 
-export async function dbAll(query: string, params: any[] = []): Promise<any[]> {
-  const { q, request } = convertQuery(query, params);
-  try {
-    const result = await request.query(q);
-    return result.recordset;
-  } catch (error) {
-    logger.error(`Database Error in dbAll: ${error}`);
-    throw error;
-  }
+export function dbAll(query: string, params: any[] = []): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    db.all(query, params, (err, rows) => {
+      if (err) {
+        logger.error(`Database Error in dbAll: ${err}`);
+        reject(err);
+      } else {
+        resolve(rows || []);
+      }
+    });
+  });
 }
 
 async function initializeDatabase() {
@@ -86,15 +78,22 @@ async function initializeDatabase() {
   if (fs.existsSync(sqlFilePath)) {
     try {
       const sqlContent = fs.readFileSync(sqlFilePath, 'utf8');
-      const request = new sql.Request(db);
-      await request.query(sqlContent);
-      logger.info('Database tables initialized successfully from isiqalo.sql');
+      
+      // sqlite3 exec method handles multiple statements
+      db.exec(sqlContent, (err) => {
+        if (err) {
+           logger.error('Error initializing database from file:', err);
+        } else {
+           logger.info('Database tables initialized successfully from isiqalo.sql');
+        }
+        resolveDbInit();
+      });
     } catch (err) {
-      logger.error('Error initializing database from file:', err);
+      logger.error('Error reading isiqalo.sql file:', err);
+      resolveDbInit();
     }
   } else {
     logger.warn('isiqalo.sql not found in data directory');
+    resolveDbInit();
   }
-
-  resolveDbInit();
 }

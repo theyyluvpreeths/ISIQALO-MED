@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import crypto from 'crypto';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
-import { PatientRepository, DocumentRepository, AuditLogRepository, PatientEntity } from '../repositories/database.repositories';
+import { PatientRepository, DocumentRepository, AuditLogRepository, PatientEntity, CaseCommentRepository } from '../repositories/database.repositories';
 import { encrypt, decrypt } from '../services/encryption';
 import { logSecurityEvent } from '../config/logger';
 import fs from 'fs';
@@ -54,6 +54,8 @@ export class PatientController {
         contact_encrypted: contact ? encrypt(contact) : null,
         medical_aid: medicalAid || null,
         medical_aid_number_encrypted: medicalAidNumber ? encrypt(medicalAidNumber) : null,
+        views_count: 0,
+        downloads_count: 0,
         created_at: now
       };
 
@@ -90,35 +92,42 @@ export class PatientController {
       }
 
       const patientId = req.params.patientId || req.params.id;
-      const file = req.file;
-      if (!file) {
-        res.status(400).json({ error: 'No document uploaded' });
+      const files = req.files as Express.Multer.File[];
+      
+      if (!files || files.length === 0) {
+        res.status(400).json({ error: 'No documents uploaded' });
         return;
       }
 
       const ip = req.ip || 'unknown';
       const userAgent = req.headers['user-agent'] || 'unknown';
       const now = new Date().toISOString();
-      const docId = `doc-${crypto.randomBytes(4).toString('hex')}`;
-      
-      const fileExt = file.originalname.split('.').pop() || 'unknown';
-
       const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
       await containerClient.createIfNotExists();
-      const blockBlobClient = containerClient.getBlockBlobClient(file.filename);
-      await blockBlobClient.uploadFile(file.path);
-      await fs.promises.unlink(file.path);
 
-      await DocumentRepository.createDocument({
-        id: docId,
-        patient_id: patientId,
-        uploaded_by_doctor_id: req.user.id,
-        file_name: file.originalname,
-        file_type: fileExt,
-        file_size: file.size,
-        file_path_encrypted: encrypt(file.filename),
-        uploaded_at: now
-      });
+      const uploadedDocIds: string[] = [];
+
+      for (const file of files) {
+        const docId = `doc-${crypto.randomBytes(4).toString('hex')}`;
+        const fileExt = file.originalname.split('.').pop() || 'unknown';
+
+        const blockBlobClient = containerClient.getBlockBlobClient(file.filename);
+        await blockBlobClient.uploadFile(file.path);
+        await fs.promises.unlink(file.path);
+
+        await DocumentRepository.createDocument({
+          id: docId,
+          patient_id: patientId,
+          uploaded_by_doctor_id: req.user.id,
+          file_name: file.originalname,
+          file_type: fileExt,
+          file_size: file.size,
+          file_path_encrypted: encrypt(file.filename),
+          uploaded_at: now
+        });
+
+        uploadedDocIds.push(docId);
+      }
 
       await AuditLogRepository.createAuditLog({
         id: crypto.randomUUID(),
@@ -126,14 +135,14 @@ export class PatientController {
         action: 'DOCUMENT_UPLOADED',
         ip_address: ip,
         user_agent: userAgent,
-        details: `Uploaded ${fileExt} document for patient: ${patientId}`,
+        details: `Uploaded ${files.length} documents for patient: ${patientId}`,
         created_at: now
       });
 
-      res.status(201).json({ message: 'Document uploaded successfully', docId });
+      res.status(201).json({ message: 'Documents uploaded successfully', docIds: uploadedDocIds });
     } catch (error) {
-      console.error('Upload document error:', error);
-      res.status(500).json({ error: 'Internal server error uploading document.' });
+      console.error('Upload documents error:', error);
+      res.status(500).json({ error: 'Internal server error uploading documents.' });
     }
   }
 
@@ -158,7 +167,9 @@ export class PatientController {
         res.status(500).json({ error: 'Failed to decrypt document path' });
         return;
       }
-      
+
+      await PatientRepository.incrementDownloads(id);
+
       const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
       const blockBlobClient = containerClient.getBlockBlobClient(fileKey);
       
@@ -209,6 +220,8 @@ export class PatientController {
       contact: PatientController.safeDecrypt(p.contact_encrypted),
       medicalAid: p.medical_aid,
       medicalAidNumber: PatientController.safeDecrypt(p.medical_aid_number_encrypted),
+      viewsCount: p.views_count,
+      downloadsCount: p.downloads_count,
       createdAt: p.created_at
     };
   }
@@ -220,7 +233,13 @@ export class PatientController {
         return;
       }
       
-      const patients = await PatientRepository.getPatientsForDoctor(req.user.id);
+      let patients;
+      if (req.user.role === 'admin' || req.user.role === 'superadmin' || req.user.role === 'viewer') {
+        patients = await PatientRepository.getAllPatients();
+      } else {
+        patients = await PatientRepository.getPatientsForDoctor(req.user.id);
+      }
+
       const decrypted = patients.map(p => PatientController.mapPatientToResponse(p));
       res.status(200).json(decrypted);
     } catch (error) {
@@ -239,6 +258,8 @@ export class PatientController {
         return;
       }
 
+      await PatientRepository.incrementViews(patientId);
+
       const docs = await DocumentRepository.getDocumentsByPatientId(patientId);
       
       const response = {
@@ -256,6 +277,173 @@ export class PatientController {
     } catch (error) {
       console.error('Fetch single patient error:', error);
       res.status(500).json({ error: 'Internal server error retrieving patient details.' });
+    }
+  }
+
+  static async updatePatient(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      const patientId = req.params.id;
+      const existingPatient = await PatientRepository.getPatientById(patientId);
+      if (!existingPatient) {
+        res.status(404).json({ error: 'Patient not found' });
+        return;
+      }
+
+      const isAssigned = await PatientRepository.isDoctorAssignedToPatient(req.user.id, patientId);
+      if (!isAssigned) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+      }
+
+      const {
+        organisationName, facilityType, medicineType, treatmentName, treatmentNotes,
+        isPriority, sufferingFrom, existingInfo,
+        firstName, lastName, idNumber, dob, gender,
+        contact, medicalAid, medicalAidNumber
+      } = req.body;
+
+      const updates: Partial<PatientEntity> = {};
+
+      if (organisationName !== undefined) updates.organisation_name = organisationName;
+      if (facilityType !== undefined) updates.facility_type = facilityType;
+      if (medicineType !== undefined) updates.medicine_type = medicineType;
+      if (treatmentName !== undefined) updates.treatment_name = treatmentName;
+      if (treatmentNotes !== undefined) updates.treatment_notes_encrypted = treatmentNotes ? encrypt(treatmentNotes) : null;
+      if (isPriority !== undefined) updates.is_priority = isPriority ? 1 : 0;
+      if (sufferingFrom !== undefined) updates.suffering_from = sufferingFrom;
+      if (existingInfo !== undefined) updates.existing_info_encrypted = existingInfo ? encrypt(existingInfo) : null;
+      if (firstName !== undefined) updates.first_name_encrypted = firstName ? encrypt(firstName) : null;
+      if (lastName !== undefined) updates.last_name_encrypted = lastName ? encrypt(lastName) : null;
+      if (idNumber !== undefined) updates.id_number_encrypted = idNumber ? encrypt(idNumber) : null;
+      if (dob !== undefined) updates.dob = dob || null;
+      if (gender !== undefined) updates.gender = gender || null;
+      if (contact !== undefined) updates.contact_encrypted = contact ? encrypt(contact) : null;
+      if (medicalAid !== undefined) updates.medical_aid = medicalAid || null;
+      if (medicalAidNumber !== undefined) updates.medical_aid_number_encrypted = medicalAidNumber ? encrypt(medicalAidNumber) : null;
+
+      await PatientRepository.updatePatient(patientId, updates);
+
+      const ip = req.ip || 'unknown';
+      const userAgent = req.headers['user-agent'] || 'unknown';
+      const now = new Date().toISOString();
+
+      await AuditLogRepository.createAuditLog({
+        id: crypto.randomUUID(),
+        user_id: req.user.id,
+        action: 'PATIENT_UPDATED',
+        ip_address: ip,
+        user_agent: userAgent,
+        details: `Updated patient record: ${patientId}`,
+        created_at: now
+      });
+
+      res.status(200).json({ message: 'Patient updated successfully.' });
+    } catch (error) {
+      console.error('Update patient error:', error);
+      res.status(500).json({ error: 'Internal server error updating patient.' });
+    }
+  }
+
+  static async deletePatient(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      const patientId = req.params.id;
+      const existingPatient = await PatientRepository.getPatientById(patientId);
+      if (!existingPatient) {
+        res.status(404).json({ error: 'Patient not found' });
+        return;
+      }
+
+      const isAssigned = await PatientRepository.isDoctorAssignedToPatient(req.user.id, patientId);
+      if (!isAssigned) {
+        res.status(403).json({ error: 'Forbidden' });
+        return;
+      }
+
+      // Fetch documents to delete from Blob Storage
+      const docs = await DocumentRepository.getDocumentsByPatientId(patientId);
+      const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
+
+      for (const doc of docs) {
+        const fileKey = PatientController.safeDecrypt(doc.file_path_encrypted);
+        if (fileKey) {
+          const blockBlobClient = containerClient.getBlockBlobClient(fileKey);
+          await blockBlobClient.deleteIfExists();
+        }
+      }
+
+      await PatientRepository.deletePatient(patientId);
+
+      const ip = req.ip || 'unknown';
+      const userAgent = req.headers['user-agent'] || 'unknown';
+      const now = new Date().toISOString();
+
+      await AuditLogRepository.createAuditLog({
+        id: crypto.randomUUID(),
+        user_id: req.user.id,
+        action: 'PATIENT_DELETED',
+        ip_address: ip,
+        user_agent: userAgent,
+        details: `Deleted patient record: ${patientId}`,
+        created_at: now
+      });
+
+      res.status(200).json({ message: 'Patient deleted successfully.' });
+    } catch (error) {
+      console.error('Delete patient error:', error);
+      res.status(500).json({ error: 'Internal server error deleting patient.' });
+    }
+  }
+
+  static async getComments(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const patientId = req.params.id;
+      const comments = await CaseCommentRepository.getCommentsByPatientId(patientId);
+      res.status(200).json(comments);
+    } catch (error) {
+      console.error('Fetch comments error:', error);
+      res.status(500).json({ error: 'Internal server error fetching comments.' });
+    }
+  }
+
+  static async addComment(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      if (!req.user) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+      }
+
+      const patientId = req.params.id;
+      const { content } = req.body;
+
+      if (!content || !content.trim()) {
+        res.status(400).json({ error: 'Comment content is required' });
+        return;
+      }
+
+      const commentId = `cmt-${crypto.randomBytes(4).toString('hex')}`;
+      
+      await CaseCommentRepository.createComment({
+        id: commentId,
+        patient_id: patientId,
+        doctor_id: req.user.id,
+        content: content.trim(),
+        created_at: new Date().toISOString()
+      });
+
+      res.status(201).json({ message: 'Comment added successfully', commentId });
+    } catch (error) {
+      console.error('Add comment error:', error);
+      res.status(500).json({ error: 'Internal server error adding comment.' });
     }
   }
 }

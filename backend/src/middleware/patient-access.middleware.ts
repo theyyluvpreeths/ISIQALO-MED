@@ -21,6 +21,15 @@ export async function authorizePatientAccess(req: AuthenticatedRequest, res: Res
       return next();
     }
 
+    // Viewers can view all patients but cannot edit or delete
+    if (user.role === 'viewer') {
+      if (req.method !== 'GET') {
+        res.status(403).json({ error: 'Forbidden: Viewers cannot modify patient data.' });
+        return;
+      }
+      return next();
+    }
+
     const isAssigned = await PatientRepository.isDoctorAssignedToPatient(user.id, patientId);
     if (!isAssigned) {
       res.status(403).json({ error: 'Forbidden: You are not authorized to view or edit this patient.' });
