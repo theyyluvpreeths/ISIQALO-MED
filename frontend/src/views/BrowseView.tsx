@@ -281,17 +281,22 @@ export default function BrowseView() {
               ))
             )}
           </div>
-          <form onSubmit={handlePostComment} style={{ display: 'flex', gap: '1rem' }}>
-            <input 
-              type="text" 
+          <form onSubmit={handlePostComment} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            <textarea 
               className="form-input" 
-              style={{ flex: 1 }} 
-              placeholder="Add your medical opinion or question..." 
+              style={{ width: '120px', flexShrink: 0, minHeight: '80px', resize: 'vertical' }} 
+              placeholder="Add..." 
               value={newComment}
               onChange={e => setNewComment(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  if (newComment.trim()) handlePostComment(e as any);
+                }
+              }}
             />
-            <button type="submit" className="btn btn-primary" disabled={!newComment.trim()}>
-              <Send size={16} /> Post
+            <button type="submit" className="btn btn-primary" style={{ flex: 1, height: '80px', fontSize: '1.2rem' }} disabled={!newComment.trim()}>
+              <Send size={24} style={{ marginRight: '0.5rem' }} /> Post
             </button>
           </form>
         </div>

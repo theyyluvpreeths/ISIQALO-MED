@@ -386,9 +386,9 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
                 <div style={{ display: 'grid', gap: '0.5rem', width: '100%', maxWidth: '400px' }}>
                   {files.map((f, idx) => (
                     <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--background)', padding: '0.5rem 1rem', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', overflow: 'hidden', flex: 1, minWidth: 0 }}>
                         <Paperclip size={16} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-                        <span style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
+                        <span style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block', width: '100%' }}>{f.name}</span>
                       </div>
                       <button 
                         type="button"

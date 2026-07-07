@@ -64,10 +64,9 @@ export default function App() {
     <div className="app-container">
       {/* SIDEBAR NAVIGATION */}
       <aside className="app-sidebar">
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <Shield size={24} />
-            Isiqalo<span>Med</span>
+        <div className="sidebar-header" style={{ padding: 0 }}>
+          <div className="sidebar-logo" style={{ padding: 0, margin: 0, width: '100%', height: '100%', display: 'flex' }}>
+            <img src="/generated_logo.png" alt="Isiqalo Med Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           </div>
         </div>
 

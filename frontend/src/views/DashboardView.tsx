@@ -29,8 +29,9 @@ export default function DashboardView({ onNavigate, showToast }: DashboardViewPr
         const patientsData = await apiRequest('/patients');
         setPatients(patientsData || []);
 
-        const extractHistory = await apiRequest('/extract/history');
-        setExtractionsCount(extractHistory.length);
+        const auditLogs = await apiRequest('/settings/audit-logs');
+        const extractions = auditLogs.filter((log: any) => log.action === 'DATA_EXTRACTION');
+        setExtractionsCount(extractions.length);
       } catch (err: any) {
         showToast('Failed to load dashboard metrics.', 'error');
       } finally {
