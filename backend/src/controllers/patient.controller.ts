@@ -233,11 +233,24 @@ export class PatientController {
         return;
       }
       
+      const filters = {
+        organisationName: req.query.organisationName as string,
+        medicineType: req.query.medicineType as string,
+        medicalAid: req.query.medicalAid as string,
+      };
+      
       let patients;
+      const { AuthPatientLinkRepository } = require('../repositories/database.repositories');
+
       if (req.user.role === 'admin' || req.user.role === 'superadmin' || req.user.role === 'viewer') {
-        patients = await PatientRepository.getAllPatients();
+        patients = await PatientRepository.getAllPatients(filters);
+      } else if (req.user.role === 'patient') {
+        // Patient only gets their linked cases
+        const allPatients = await PatientRepository.getAllPatients(filters);
+        const linkedIds = await AuthPatientLinkRepository.getLinkedPatientIds(req.user.id);
+        patients = allPatients.filter(p => linkedIds.includes(p.id));
       } else {
-        patients = await PatientRepository.getPatientsForDoctor(req.user.id);
+        patients = await PatientRepository.getPatientsForDoctor(req.user.id, filters);
       }
 
       const decrypted = patients.map(p => PatientController.mapPatientToResponse(p));
@@ -417,33 +430,66 @@ export class PatientController {
 
   static async addComment(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
+      const patientId = req.params.id;
+      const { content } = req.body;
+      const doctorId = req.user?.id;
+
+      if (!doctorId || !content) {
+        res.status(400).json({ error: 'Missing required comment fields' });
+        return;
+      }
+
+      const commentId = `com-${crypto.randomBytes(4).toString('hex')}`;
+      const now = new Date().toISOString();
+
+      await CaseCommentRepository.createComment({
+        id: commentId,
+        patient_id: patientId,
+        doctor_id: doctorId,
+        content,
+        created_at: now
+      });
+
+      res.status(201).json({ message: 'Comment added', id: commentId });
+    } catch (error) {
+      console.error('Add comment error:', error);
+      res.status(500).json({ error: 'Failed to add comment' });
+    }
+  }
+
+  static async linkPatientRecord(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
       if (!req.user) {
         res.status(401).json({ error: 'Unauthorized' });
         return;
       }
 
-      const patientId = req.params.id;
-      const { content } = req.body;
-
-      if (!content || !content.trim()) {
-        res.status(400).json({ error: 'Comment content is required' });
+      const { idNumber } = req.body;
+      if (!idNumber) {
+        res.status(400).json({ error: 'ID Number is required' });
         return;
       }
 
-      const commentId = `cmt-${crypto.randomBytes(4).toString('hex')}`;
-      
-      await CaseCommentRepository.createComment({
-        id: commentId,
-        patient_id: patientId,
-        doctor_id: req.user.id,
-        content: content.trim(),
-        created_at: new Date().toISOString()
+      const allPatients = await PatientRepository.getAllPatients();
+      const matchedPatients = allPatients.filter(p => {
+        const decId = PatientController.safeDecrypt(p.id_number_encrypted);
+        return decId === idNumber;
       });
 
-      res.status(201).json({ message: 'Comment added successfully', commentId });
+      if (matchedPatients.length === 0) {
+        res.status(404).json({ error: 'No records found matching this ID number.' });
+        return;
+      }
+
+      const { AuthPatientLinkRepository } = require('../repositories/database.repositories');
+      for (const p of matchedPatients) {
+        await AuthPatientLinkRepository.linkPatient(req.user.id, p.id);
+      }
+
+      res.status(200).json({ message: `Successfully linked ${matchedPatients.length} record(s).` });
     } catch (error) {
-      console.error('Add comment error:', error);
-      res.status(500).json({ error: 'Internal server error adding comment.' });
+      console.error('Link patient record error:', error);
+      res.status(500).json({ error: 'Failed to link patient record' });
     }
   }
 }

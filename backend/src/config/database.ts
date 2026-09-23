@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const dbPath = process.env.DB_DATABASE_PATH || path.join(process.cwd(), 'data', 'database.sqlite');
+const dbPath = process.env.DB_DATABASE_PATH || path.resolve(__dirname, '../../data', 'database.sqlite');
 const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
@@ -74,7 +74,7 @@ export function dbAll(query: string, params: any[] = []): Promise<any[]> {
 }
 
 async function initializeDatabase() {
-  const sqlFilePath = path.join(process.cwd(), 'data', 'isiqalo.sql');
+  const sqlFilePath = path.resolve(__dirname, '../../data', 'isiqalo.sql');
   if (fs.existsSync(sqlFilePath)) {
     try {
       const sqlContent = fs.readFileSync(sqlFilePath, 'utf8');

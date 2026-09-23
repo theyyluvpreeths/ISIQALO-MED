@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardView from './views/DashboardView';
 import UploadView from './views/UploadView';
 import ExtractView from './views/ExtractView';
@@ -6,6 +6,9 @@ import BrowseView from './views/BrowseView';
 import ManageCasesView from './views/ManageCasesView';
 import MessagesView from './views/MessagesView';
 import SettingsView from './views/SettingsView';
+import AuthView from './views/AuthView';
+import PatientSignupView from './views/PatientSignupView';
+import PractitionerSignupView from './views/PractitionerSignupView';
 import { 
   Shield, 
   LayoutDashboard, 
@@ -15,26 +18,17 @@ import {
   Settings as SettingsIcon, 
   Bell, 
   ShieldCheck,
-  MessageSquare
+  MessageSquare,
+  LogOut
 } from 'lucide-react';
-
-// Demo practitioner user — no login required
-const DEMO_USER = {
-  id: 'demo-practitioner-001',
-  email: 'dr.demo@isiqalo.co.za',
-  firstName: 'Demo',
-  lastName: 'Practitioner',
-  role: 'practitioner',
-  hpcsaNumber: 'MP1234567',
-  speciality: 'General Medicine',
-  practiceName: 'Isiqalo Demo Practice',
-  practiceNumber: '1234567',
-  subscriptionPlan: 'professional',
-};
+import { apiRequest, setToken } from './utils/api';
 
 export default function App() {
-  const [user, setUser] = useState(DEMO_USER);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [user, setUser] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('browse');
+  
+  // Auth state
+  const [authMode, setAuthMode] = useState<'login' | 'patient_signup' | 'practitioner_signup'>('login');
   
   // Toast notifications manager
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -45,6 +39,49 @@ export default function App() {
       setToast(null);
     }, 4000);
   };
+
+  useEffect(() => {
+    // Basic init check
+    const checkAuth = async () => {
+      const token = localStorage.getItem('isiqalo_token');
+      if (token) {
+        setToken(token);
+        try {
+          const res = await apiRequest('/auth/me', 'GET');
+          setUser(res.user);
+          setActiveTab(res.user.role === 'patient' ? 'browse' : 'dashboard');
+        } catch (err) {
+          localStorage.removeItem('isiqalo_token');
+          setToken(null);
+        }
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isiqalo_token');
+    setToken(null);
+    setUser(null);
+  };
+
+  if (!user) {
+    if (authMode === 'patient_signup') {
+      return <PatientSignupView onBackToLogin={() => setAuthMode('login')} showToast={showToast} />;
+    }
+    if (authMode === 'practitioner_signup') {
+      return <PractitionerSignupView onBackToLogin={() => setAuthMode('login')} showToast={showToast} />;
+    }
+    
+    return <AuthView 
+      onAuthSuccess={(u) => {
+        setUser(u);
+        setActiveTab(u.role === 'patient' ? 'browse' : 'dashboard');
+      }} 
+      showToast={showToast} 
+      onNavigateSignup={(role) => setAuthMode(role === 'patient' ? 'patient_signup' : 'practitioner_signup')}
+    />;
+  }
 
   // Determine Tab Label Title
   const getTabTitle = () => {
@@ -71,26 +108,30 @@ export default function App() {
         </div>
 
         <nav className="sidebar-menu">
-          <button 
-            className={`sidebar-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            <LayoutDashboard size={18} /> Dashboard
-          </button>
+          {user.role !== 'patient' && (
+            <>
+              <button 
+                className={`sidebar-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+                onClick={() => setActiveTab('dashboard')}
+              >
+                <LayoutDashboard size={18} /> Dashboard
+              </button>
 
-          <button 
-            className={`sidebar-item ${activeTab === 'upload' ? 'active' : ''}`}
-            onClick={() => setActiveTab('upload')}
-          >
-            <UploadCloud size={18} /> Upload Case
-          </button>
+              <button 
+                className={`sidebar-item ${activeTab === 'upload' ? 'active' : ''}`}
+                onClick={() => setActiveTab('upload')}
+              >
+                <UploadCloud size={18} /> Upload Case
+              </button>
 
-          <button 
-            className={`sidebar-item ${activeTab === 'extract' ? 'active' : ''}`}
-            onClick={() => setActiveTab('extract')}
-          >
-            <Database size={18} /> Extract Data
-          </button>
+              <button 
+                className={`sidebar-item ${activeTab === 'extract' ? 'active' : ''}`}
+                onClick={() => setActiveTab('extract')}
+              >
+                <Database size={18} /> Extract Data
+              </button>
+            </>
+          )}
 
           <button 
             className={`sidebar-item ${activeTab === 'browse' ? 'active' : ''}`}
@@ -99,12 +140,14 @@ export default function App() {
             <BookOpen size={18} /> Browse Cases
           </button>
 
-          <button 
-            className={`sidebar-item ${activeTab === 'manage' ? 'active' : ''}`}
-            onClick={() => setActiveTab('manage')}
-          >
-            <Database size={18} /> Manage Cases
-          </button>
+          {user.role !== 'patient' && (
+            <button 
+              className={`sidebar-item ${activeTab === 'manage' ? 'active' : ''}`}
+              onClick={() => setActiveTab('manage')}
+            >
+              <Database size={18} /> Manage Cases
+            </button>
+          )}
 
           <button 
             className={`sidebar-item ${activeTab === 'messages' ? 'active' : ''}`}
@@ -119,6 +162,14 @@ export default function App() {
           >
             <SettingsIcon size={18} /> Settings
           </button>
+          
+          <button 
+            className="sidebar-item"
+            style={{ color: '#ef4444', marginTop: '1rem' }}
+            onClick={handleLogout}
+          >
+            <LogOut size={18} /> Logout
+          </button>
         </nav>
 
         <div className="sidebar-footer">
@@ -128,15 +179,11 @@ export default function App() {
               {user.firstName[0]}{user.lastName[0]}
             </div>
             <div className="profile-info">
-              <p className="profile-name">Dr. {user.firstName} {user.lastName}</p>
-              <p className="profile-role">{user.speciality}</p>
+              <p className="profile-name">
+                {user.role === 'patient' ? `${user.firstName} ${user.lastName}` : `Dr. ${user.firstName} ${user.lastName}`}
+              </p>
+              <p className="profile-role">{user.role === 'patient' ? 'Patient' : user.speciality}</p>
             </div>
-          </div>
-
-          <div style={{ padding: '0.5rem 0.75rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: 'var(--radius)', border: '1px solid rgba(16, 185, 129, 0.2)', textAlign: 'center' }}>
-            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Demo Mode Active
-            </span>
           </div>
         </div>
       </aside>
@@ -165,7 +212,7 @@ export default function App() {
           {activeTab === 'dashboard' && <DashboardView onNavigate={setActiveTab} showToast={showToast} />}
           {activeTab === 'upload' && <UploadView onNavigate={setActiveTab} showToast={showToast} />}
           {activeTab === 'extract' && <ExtractView showToast={showToast} />}
-          {activeTab === 'browse' && <BrowseView />}
+          {activeTab === 'browse' && <BrowseView user={user} showToast={showToast} />}
           {activeTab === 'manage' && <ManageCasesView showToast={showToast} />}
           {activeTab === 'messages' && <MessagesView user={user} />}
           {activeTab === 'settings' && <SettingsView user={user} onUserUpdate={setUser} showToast={showToast} />}

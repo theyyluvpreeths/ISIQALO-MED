@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from './auth.middleware';
-import { PatientRepository } from '../repositories/database.repositories';
+import { PatientRepository, AuthPatientLinkRepository } from '../repositories/database.repositories';
 
 export async function authorizePatientAccess(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -12,19 +12,25 @@ export async function authorizePatientAccess(req: AuthenticatedRequest, res: Res
 
     const patientId = req.params.patientId || req.params.id;
     if (!patientId) {
-      // If there's no patientId in the route params, nothing to check here
       return next();
     }
 
-    // Admins can bypass assigned doctor check
     if (user.role === 'admin' || user.role === 'superadmin') {
       return next();
     }
 
-    // Viewers can view all patients but cannot edit or delete
     if (user.role === 'viewer') {
       if (req.method !== 'GET') {
         res.status(403).json({ error: 'Forbidden: Viewers cannot modify patient data.' });
+        return;
+      }
+      return next();
+    }
+
+    if (user.role === 'patient') {
+      const isLinked = await AuthPatientLinkRepository.isPatientLinked(user.id, patientId);
+      if (!isLinked) {
+        res.status(403).json({ error: 'Forbidden: You are not linked to this patient record.' });
         return;
       }
       return next();

@@ -21,6 +21,11 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   
+  // Advanced Search
+  const [advHospital, setAdvHospital] = useState('');
+  const [advCategory, setAdvCategory] = useState('');
+  const [advMedicalAid, setAdvMedicalAid] = useState('');
+  
   // Selection state
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [extractFormat, setExtractFormat] = useState<'JSON' | 'CSV' | 'PDF' | 'ZIP'>('JSON');
@@ -29,11 +34,17 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
 
   useEffect(() => {
     fetchPatients();
-  }, []);
+  }, [advHospital, advCategory, advMedicalAid]);
 
   async function fetchPatients() {
     try {
-      const data = await apiRequest('/patients', 'GET');
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (advHospital) params.append('organisationName', advHospital);
+      if (advCategory) params.append('medicineType', advCategory);
+      if (advMedicalAid) params.append('medicalAid', advMedicalAid);
+
+      const data = await apiRequest(`/patients?${params.toString()}`, 'GET');
       setPatients(data || []);
     } catch (err: any) {
       showToast('Failed to retrieve patient roster.', 'error');
@@ -118,22 +129,61 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
 
   return (
     <div className="panel-card animate-slide-up" style={{ minHeight: '450px', paddingBottom: selectedIds.length > 0 ? '5rem' : '1.5rem' }}>
-      <div className="panel-header">
-        <h3 className="panel-title">Data Extraction (PACS)</h3>
-        <span style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>Bulk export patient records and clinical history</span>
-      </div>
+      <div className="panel-header" style={{ flexDirection: 'column', alignItems: 'stretch', gap: '1.5rem', marginBottom: '1.5rem' }}>
+        <div>
+          <h3 className="panel-title">Data Extraction (PACS)</h3>
+          <p style={{ color: 'var(--muted-foreground)' }}>Bulk export patient records and clinical history</p>
+        </div>
 
-      {/* Filters Bar */}
-      <div className="filters-bar" style={{ marginBottom: '1.5rem' }}>
-        <div className="search-wrapper" style={{ width: '100%' }}>
-          <Search size={18} className="search-icon" />
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Search patients by ID, name, or condition..."
+        <div style={{ position: 'relative' }}>
+          <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-foreground)' }} />
+          <input 
+            type="text" 
+            className="form-input" 
+            placeholder="Search patients by ID, name, or condition..." 
+            style={{ paddingLeft: '2.75rem', height: '3rem', fontSize: '1rem' }}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ width: '100%' }}
+          />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
+          <input 
+            type="text" 
+            className="form-input" 
+            placeholder="Hospital Name" 
+            value={advHospital}
+            onChange={e => setAdvHospital(e.target.value)}
+          />
+          <select className="form-input" value={advCategory} onChange={e => setAdvCategory(e.target.value)}>
+            <option value="">All Categories</option>
+            <option value="Cardiology">Cardiology</option>
+            <option value="Dentistry">Dentistry</option>
+            <option value="Dermatology">Dermatology</option>
+            <option value="Emergency Medicine">Emergency Medicine</option>
+            <option value="Endocrinology">Endocrinology</option>
+            <option value="Gastroenterology">Gastroenterology</option>
+            <option value="General Practice / Family Medicine">General Practice / Family Medicine</option>
+            <option value="General Surgery">General Surgery</option>
+            <option value="Internal Medicine">Internal Medicine</option>
+            <option value="Nephrology">Nephrology</option>
+            <option value="Neurology">Neurology</option>
+            <option value="Obstetrics and Gynecology (OB/GYN)">Obstetrics and Gynecology (OB/GYN)</option>
+            <option value="Oncology">Oncology</option>
+            <option value="Ophthalmology">Ophthalmology</option>
+            <option value="Orthopedic Surgery">Orthopedic Surgery</option>
+            <option value="Otolaryngology (ENT)">Otolaryngology (ENT)</option>
+            <option value="Pediatrics">Pediatrics</option>
+            <option value="Psychiatry">Psychiatry</option>
+            <option value="Pulmonology">Pulmonology</option>
+            <option value="Radiology">Radiology</option>
+            <option value="Urology">Urology</option>
+          </select>
+          <input 
+            type="text" 
+            className="form-input" 
+            placeholder="Medical Aid" 
+            value={advMedicalAid}
+            onChange={e => setAdvMedicalAid(e.target.value)}
           />
         </div>
       </div>

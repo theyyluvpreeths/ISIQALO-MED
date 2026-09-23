@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiRequest } from '../utils/api';
-import { Search, Eye, AlertTriangle, ShieldCheck, User, Calendar, X, Building, Download, Paperclip, MessageSquare, Send } from 'lucide-react';
+import { Search, Eye, AlertTriangle, ShieldCheck, User, Calendar, X, Building, Download, Paperclip, MessageSquare, Send, Link as LinkIcon } from 'lucide-react';
 
 interface Patient {
   id: string;
@@ -38,6 +38,11 @@ interface Comment {
   last_name: string;
   role: string;
   created_at: string;
+}
+
+interface BrowseViewProps {
+  user?: any;
+  showToast?: (msg: string, type: 'success' | 'error') => void;
 }
 
 const DocumentItem = ({ doc, patientId }: { doc: Document; patientId: string }) => {
@@ -94,10 +99,15 @@ const DocumentItem = ({ doc, patientId }: { doc: Document; patientId: string }) 
   );
 };
 
-export default function BrowseView() {
+export default function BrowseView({ user, showToast }: BrowseViewProps = {}) {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Advanced Search
+  const [advHospital, setAdvHospital] = useState('');
+  const [advCategory, setAdvCategory] = useState('');
+  const [advMedicalAid, setAdvMedicalAid] = useState('');
   
   // Single Patient View
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -106,19 +116,47 @@ export default function BrowseView() {
   const [newComment, setNewComment] = useState('');
   const [detailsLoading, setDetailsLoading] = useState(false);
 
+  // Linking State
+  const [linkIdNumber, setLinkIdNumber] = useState('');
+  const [linking, setLinking] = useState(false);
+
+  const fetchPatients = async () => {
+    try {
+      setLoading(true);
+      const queryParams = new URLSearchParams();
+      if (advHospital) queryParams.append('organisationName', advHospital);
+      if (advCategory) queryParams.append('medicineType', advCategory);
+      if (advMedicalAid) queryParams.append('medicalAid', advMedicalAid);
+
+      const url = `/patients${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const data = await apiRequest(url, 'GET');
+      setPatients(data || []);
+    } catch (err) {
+      console.error('Failed to fetch patients', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPatients = async () => {
-      try {
-        const data = await apiRequest('/patients', 'GET');
-        setPatients(data || []);
-      } catch (err) {
-        console.error('Failed to fetch patients', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchPatients();
-  }, []);
+  }, [advHospital, advCategory, advMedicalAid]);
+
+  const handleLinkRecord = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!linkIdNumber) return;
+    setLinking(true);
+    try {
+      const res = await apiRequest('/patients/link', 'POST', { idNumber: linkIdNumber });
+      if (showToast) showToast(res.message, 'success');
+      setLinkIdNumber('');
+      fetchPatients();
+    } catch (err: any) {
+      if (showToast) showToast(err.message || 'Failed to link record', 'error');
+    } finally {
+      setLinking(false);
+    }
+  };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -323,6 +361,47 @@ export default function BrowseView() {
             onChange={handleSearch}
           />
         </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
+          <input 
+            type="text" 
+            className="form-input" 
+            placeholder="Hospital Name" 
+            value={advHospital}
+            onChange={e => setAdvHospital(e.target.value)}
+          />
+          <select className="form-input" value={advCategory} onChange={e => setAdvCategory(e.target.value)}>
+            <option value="">All Categories</option>
+            <option value="Cardiology">Cardiology</option>
+            <option value="Dentistry">Dentistry</option>
+            <option value="Dermatology">Dermatology</option>
+            <option value="Emergency Medicine">Emergency Medicine</option>
+            <option value="Endocrinology">Endocrinology</option>
+            <option value="Gastroenterology">Gastroenterology</option>
+            <option value="General Practice / Family Medicine">General Practice / Family Medicine</option>
+            <option value="General Surgery">General Surgery</option>
+            <option value="Internal Medicine">Internal Medicine</option>
+            <option value="Nephrology">Nephrology</option>
+            <option value="Neurology">Neurology</option>
+            <option value="Obstetrics and Gynecology (OB/GYN)">Obstetrics and Gynecology (OB/GYN)</option>
+            <option value="Oncology">Oncology</option>
+            <option value="Ophthalmology">Ophthalmology</option>
+            <option value="Orthopedic Surgery">Orthopedic Surgery</option>
+            <option value="Otolaryngology (ENT)">Otolaryngology (ENT)</option>
+            <option value="Pediatrics">Pediatrics</option>
+            <option value="Psychiatry">Psychiatry</option>
+            <option value="Pulmonology">Pulmonology</option>
+            <option value="Radiology">Radiology</option>
+            <option value="Urology">Urology</option>
+          </select>
+          <input 
+            type="text" 
+            className="form-input" 
+            placeholder="Medical Aid" 
+            value={advMedicalAid}
+            onChange={e => setAdvMedicalAid(e.target.value)}
+          />
+        </div>
       </div>
 
       {loading ? (
@@ -330,9 +409,32 @@ export default function BrowseView() {
           <p style={{ color: 'var(--muted-foreground)' }}>Loading patient roster...</p>
         </div>
       ) : filteredPatients.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '4rem', background: 'var(--input-bg)', borderRadius: 'var(--radius)' }}>
-          <p style={{ color: 'var(--muted-foreground)', fontSize: '1.1rem' }}>No patients found matching your search.</p>
-        </div>
+        user?.role === 'patient' ? (
+          <div style={{ textAlign: 'center', padding: '4rem', background: 'var(--input-bg)', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }}>
+            <LinkIcon size={48} style={{ color: 'var(--primary)', marginBottom: '1rem', opacity: 0.8 }} />
+            <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', color: 'var(--foreground)' }}>Link Your Medical Records</h3>
+            <p style={{ color: 'var(--muted-foreground)', fontSize: '0.95rem', marginBottom: '1.5rem', maxWidth: '400px', margin: '0 auto 1.5rem' }}>
+              We couldn't find any records linked to your account. Please enter your ID Number below to securely retrieve and link your cases.
+            </p>
+            <form onSubmit={handleLinkRecord} style={{ display: 'flex', gap: '0.5rem', maxWidth: '400px', margin: '0 auto' }}>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="Enter ID Number" 
+                value={linkIdNumber}
+                onChange={(e) => setLinkIdNumber(e.target.value)}
+                required
+              />
+              <button type="submit" className="btn btn-primary" disabled={linking}>
+                {linking ? 'Linking...' : 'Link Records'}
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '4rem', background: 'var(--input-bg)', borderRadius: 'var(--radius)' }}>
+            <p style={{ color: 'var(--muted-foreground)', fontSize: '1.1rem' }}>No patients found matching your search.</p>
+          </div>
+        )
       ) : (
         <div style={{ display: 'grid', gap: '1rem' }}>
           {filteredPatients.map(patient => (

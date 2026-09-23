@@ -7,9 +7,9 @@ import { PatientController } from '../controllers/patient.controller';
 import { ExtractionController } from '../controllers/extraction.controller';
 import { SettingsController } from '../controllers/settings.controller';
 import { ChatController } from '../controllers/chat.controller';
-import { demoAuth } from '../middleware/demo-auth.middleware';
+import { authenticateJWT } from '../middleware/auth.middleware';
 import { authorizePatientAccess } from '../middleware/patient-access.middleware';
-import { validate, registerSchema, loginSchema, settingsUpdateSchema } from '../middleware/validator.middleware';
+import { validate, settingsUpdateSchema } from '../middleware/validator.middleware';
 import { authLimiter, generalLimiter, extractionLimiter } from '../middleware/rate-limiter.middleware';
 
 const router = Router();
@@ -49,43 +49,38 @@ const upload = multer({
   }
 });
 
-// ──────────────────────────────────────────────────
-// DEMO MODE: All routes use demoAuth (no login needed)
-// For production, swap demoAuth → authenticateJWT
-// ──────────────────────────────────────────────────
-
 // Authentication routes
-router.post('/auth/register', authLimiter, validate(registerSchema), AuthController.register);
-router.post('/auth/login', authLimiter, validate(loginSchema), AuthController.login);
-router.get('/auth/me', demoAuth as any, AuthController.me as any);
-
-// Facilities routes have been deprecated in favor of native fields on patients
+router.post('/auth/login', authLimiter, AuthController.login as any);
+router.post('/auth/register/patient', authLimiter, AuthController.registerPatient as any);
+router.post('/auth/register/practitioner', authLimiter, AuthController.registerPractitioner as any);
+router.get('/auth/me', authenticateJWT as any, AuthController.me as any);
 
 // Medical Patients routes 
-router.post('/patients', demoAuth as any, PatientController.createPatient as any);
-router.get('/patients', demoAuth as any, PatientController.getPatients as any);
+router.post('/patients', authenticateJWT as any, PatientController.createPatient as any);
+router.get('/patients', authenticateJWT as any, PatientController.getPatients as any);
+router.post('/patients/link', authenticateJWT as any, PatientController.linkPatientRecord as any);
 
 // Patient Specific Routes - guarded by authorizePatientAccess
-router.get('/patients/:id', demoAuth as any, authorizePatientAccess as any, PatientController.getPatientById as any);
-router.put('/patients/:id', demoAuth as any, authorizePatientAccess as any, PatientController.updatePatient as any);
-router.delete('/patients/:id', demoAuth as any, authorizePatientAccess as any, PatientController.deletePatient as any);
-router.post('/patients/:id/documents', demoAuth as any, authorizePatientAccess as any, upload.array('files', 10), PatientController.uploadDocument as any);
-router.get('/patients/:id/documents/:docId/url', demoAuth as any, authorizePatientAccess as any, PatientController.getDocumentUrl as any);
-router.get('/patients/:id/comments', demoAuth as any, authorizePatientAccess as any, PatientController.getComments as any);
-router.post('/patients/:id/comments', demoAuth as any, authorizePatientAccess as any, PatientController.addComment as any);
+router.get('/patients/:id', authenticateJWT as any, authorizePatientAccess as any, PatientController.getPatientById as any);
+router.put('/patients/:id', authenticateJWT as any, authorizePatientAccess as any, PatientController.updatePatient as any);
+router.delete('/patients/:id', authenticateJWT as any, authorizePatientAccess as any, PatientController.deletePatient as any);
+router.post('/patients/:id/documents', authenticateJWT as any, authorizePatientAccess as any, upload.array('files', 10), PatientController.uploadDocument as any);
+router.get('/patients/:id/documents/:docId/url', authenticateJWT as any, authorizePatientAccess as any, PatientController.getDocumentUrl as any);
+router.get('/patients/:id/comments', authenticateJWT as any, authorizePatientAccess as any, PatientController.getComments as any);
+router.post('/patients/:id/comments', authenticateJWT as any, authorizePatientAccess as any, PatientController.addComment as any);
 
 // Private Chats Routes
-router.get('/chats/users', demoAuth as any, ChatController.getChatUsers as any);
-router.get('/chats/:userId', demoAuth as any, ChatController.getMessages as any);
-router.post('/chats/:userId', demoAuth as any, ChatController.sendMessage as any);
+router.get('/chats/users', authenticateJWT as any, ChatController.getChatUsers as any);
+router.get('/chats/:userId', authenticateJWT as any, ChatController.getMessages as any);
+router.post('/chats/:userId', authenticateJWT as any, ChatController.sendMessage as any);
 
 // Data Extraction & Reporting routes
-router.post('/extract', demoAuth as any, extractionLimiter, ExtractionController.extractCases as any);
-router.get('/extract/history', demoAuth as any, ExtractionController.getExtractionHistory as any);
+router.post('/extract', authenticateJWT as any, extractionLimiter, ExtractionController.extractCases as any);
+router.get('/extract/history', authenticateJWT as any, ExtractionController.getExtractionHistory as any);
 
 // Practitioner Settings routes
-router.put('/settings/profile', demoAuth as any, validate(settingsUpdateSchema), SettingsController.updateProfile as any);
-router.get('/settings/audit-logs', demoAuth as any, SettingsController.getAuditLogs as any);
-router.put('/settings/subscription', demoAuth as any, SettingsController.changeSubscription as any);
+router.put('/settings/profile', authenticateJWT as any, validate(settingsUpdateSchema), SettingsController.updateProfile as any);
+router.get('/settings/audit-logs', authenticateJWT as any, SettingsController.getAuditLogs as any);
+router.put('/settings/subscription', authenticateJWT as any, SettingsController.changeSubscription as any);
 
 export default router;

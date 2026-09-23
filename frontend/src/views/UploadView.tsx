@@ -290,26 +290,27 @@ export default function UploadView({ onNavigate, showToast }: UploadViewProps) {
               <label className="form-label">Medicine Category *</label>
               <select className="form-input" value={medicineType} onChange={(e) => setMedicineType(e.target.value)} required>
                 <option value="">Select Specialty</option>
-                <option value="General Practice / Family Medicine">General Practice / Family Medicine</option>
-                <option value="Internal Medicine">Internal Medicine</option>
-                <option value="Pediatrics">Pediatrics</option>
-                <option value="Obstetrics and Gynecology (OB/GYN)">Obstetrics and Gynecology (OB/GYN)</option>
                 <option value="Cardiology">Cardiology</option>
+                <option value="Dentistry">Dentistry</option>
                 <option value="Dermatology">Dermatology</option>
-                <option value="Psychiatry">Psychiatry</option>
-                <option value="Orthopedic Surgery">Orthopedic Surgery</option>
-                <option value="Neurology">Neurology</option>
-                <option value="Ophthalmology">Ophthalmology</option>
-                <option value="General Surgery">General Surgery</option>
-                <option value="Gastroenterology">Gastroenterology</option>
-                <option value="Urology">Urology</option>
-                <option value="Oncology">Oncology</option>
-                <option value="Pulmonology">Pulmonology</option>
-                <option value="Endocrinology">Endocrinology</option>
-                <option value="Nephrology">Nephrology</option>
-                <option value="Otolaryngology (ENT)">Otolaryngology (ENT)</option>
                 <option value="Emergency Medicine">Emergency Medicine</option>
+                <option value="Endocrinology">Endocrinology</option>
+                <option value="Gastroenterology">Gastroenterology</option>
+                <option value="General Practice / Family Medicine">General Practice / Family Medicine</option>
+                <option value="General Surgery">General Surgery</option>
+                <option value="Internal Medicine">Internal Medicine</option>
+                <option value="Nephrology">Nephrology</option>
+                <option value="Neurology">Neurology</option>
+                <option value="Obstetrics and Gynecology (OB/GYN)">Obstetrics and Gynecology (OB/GYN)</option>
+                <option value="Oncology">Oncology</option>
+                <option value="Ophthalmology">Ophthalmology</option>
+                <option value="Orthopedic Surgery">Orthopedic Surgery</option>
+                <option value="Otolaryngology (ENT)">Otolaryngology (ENT)</option>
+                <option value="Pediatrics">Pediatrics</option>
+                <option value="Psychiatry">Psychiatry</option>
+                <option value="Pulmonology">Pulmonology</option>
                 <option value="Radiology">Radiology</option>
+                <option value="Urology">Urology</option>
               </select>
             </div>
             <div className="form-group">

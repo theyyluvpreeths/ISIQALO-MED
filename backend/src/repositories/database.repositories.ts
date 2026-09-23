@@ -5,7 +5,10 @@ export interface UserEntity {
   email: string;
   password_hash: string;
   first_name: string;
+  middle_name: string | null;
   last_name: string;
+  dob: string | null;
+  medical_number: string | null;
   role: string;
   hpcsa_number: string;
   speciality: string;
@@ -90,13 +93,13 @@ export class UserRepository {
   static async createUser(user: UserEntity): Promise<void> {
     const query = `
       INSERT INTO auth_users (
-        id, email, password_hash, first_name, last_name, role,
+        id, email, password_hash, first_name, middle_name, last_name, dob, medical_number, role,
         hpcsa_number, speciality, practice_name, practice_number,
         subscription_plan, subscription_status, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     await dbRun(query, [
-      user.id, user.email, user.password_hash, user.first_name, user.last_name, user.role,
+      user.id, user.email, user.password_hash, user.first_name, user.middle_name, user.last_name, user.dob, user.medical_number, user.role,
       user.hpcsa_number, user.speciality, user.practice_name, user.practice_number,
       user.subscription_plan, user.subscription_status, user.created_at, user.updated_at
     ]);
@@ -126,47 +129,131 @@ export class UserRepository {
   }
 }
 
+export class AuthOtpRepository {
+  static async upsertOtp(email: string, otpCode: string, expiresAt: string): Promise<void> {
+    await dbRun(
+      `INSERT INTO auth_otps (email, otp_code, expires_at) VALUES (?, ?, ?)
+       ON CONFLICT(email) DO UPDATE SET otp_code=excluded.otp_code, expires_at=excluded.expires_at`,
+      [email, otpCode, expiresAt]
+    );
+  }
+
+  static async getOtp(email: string): Promise<{ otp_code: string, expires_at: string } | null> {
+    return await dbGet('SELECT otp_code, expires_at FROM auth_otps WHERE email = ?', [email]);
+  }
+
+  static async deleteOtp(email: string): Promise<void> {
+    await dbRun('DELETE FROM auth_otps WHERE email = ?', [email]);
+  }
+}
+
+export class AuthPatientLinkRepository {
+  static async linkPatient(userId: string, pacsPatientId: string): Promise<void> {
+    await dbRun(
+      `INSERT OR IGNORE INTO auth_patient_links (user_id, pacs_patient_id, linked_at) VALUES (?, ?, ?)`,
+      [userId, pacsPatientId, new Date().toISOString()]
+    );
+  }
+
+  static async getLinkedPatientIds(userId: string): Promise<string[]> {
+    const rows = await dbAll('SELECT pacs_patient_id FROM auth_patient_links WHERE user_id = ?', [userId]);
+    return rows.map((r: any) => r.pacs_patient_id);
+  }
+
+  static async isPatientLinked(userId: string, pacsPatientId: string): Promise<boolean> {
+    const row = await dbGet('SELECT 1 FROM auth_patient_links WHERE user_id = ? AND pacs_patient_id = ?', [userId, pacsPatientId]);
+    return !!row;
+  }
+}
+
+export interface PatientFilters {
+  organisationName?: string;
+  medicineType?: string;
+  medicalAid?: string;
+}
+
 export class PatientRepository {
   static async createPatient(patient: PatientEntity, doctorId: string): Promise<void> {
-    const query = `
-      INSERT INTO pacs_patients (
-        id, organisation_name, facility_type, medicine_type, is_priority, suffering_from,
-        treatment_name, treatment_notes_encrypted, existing_info_encrypted,
-        first_name_encrypted, last_name_encrypted, id_number_encrypted, dob, gender,
-        contact_encrypted, medical_aid, medical_aid_number_encrypted, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
-    await dbRun(query, [
-      patient.id, patient.organisation_name, patient.facility_type, patient.medicine_type,
-      patient.is_priority, patient.suffering_from, patient.treatment_name, patient.treatment_notes_encrypted,
-      patient.existing_info_encrypted, patient.first_name_encrypted, patient.last_name_encrypted,
-      patient.id_number_encrypted, patient.dob, patient.gender, patient.contact_encrypted,
-      patient.medical_aid, patient.medical_aid_number_encrypted, patient.created_at
-    ]);
+    await dbRun('BEGIN TRANSACTION');
+    try {
+      const query = `
+        INSERT INTO pacs_patients (
+          id, organisation_name, facility_type, medicine_type, is_priority, suffering_from, treatment_name,
+          treatment_notes_encrypted, existing_info_encrypted, first_name_encrypted, last_name_encrypted,
+          id_number_encrypted, dob, gender, contact_encrypted, medical_aid, medical_aid_number_encrypted,
+          views_count, downloads_count, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      await dbRun(query, [
+        patient.id, patient.organisation_name, patient.facility_type, patient.medicine_type, patient.is_priority,
+        patient.suffering_from, patient.treatment_name, patient.treatment_notes_encrypted, patient.existing_info_encrypted,
+        patient.first_name_encrypted, patient.last_name_encrypted, patient.id_number_encrypted, patient.dob,
+        patient.gender, patient.contact_encrypted, patient.medical_aid, patient.medical_aid_number_encrypted,
+        patient.views_count, patient.downloads_count, patient.created_at
+      ]);
 
-    // Map doctor to patient
-    await dbRun(`INSERT INTO pacs_patient_doctors (patient_id, doctor_id, assigned_at) VALUES (?, ?, ?)`, [
-      patient.id, doctorId, patient.created_at
-    ]);
+      const mappingQuery = `INSERT INTO pacs_patient_doctors (patient_id, doctor_id, assigned_at) VALUES (?, ?, ?)`;
+      await dbRun(mappingQuery, [
+        patient.id,
+        doctorId,
+        patient.created_at
+      ]);
+
+      await dbRun('COMMIT');
+    } catch (error) {
+      await dbRun('ROLLBACK');
+      throw error;
+    }
   }
 
   static async getPatientById(id: string): Promise<PatientEntity | null> {
     return await dbGet('SELECT * FROM pacs_patients WHERE id = ?', [id]);
   }
 
-  static async getPatientsForDoctor(doctorId: string): Promise<PatientEntity[]> {
-    const query = `
+  static async getPatientsForDoctor(doctorId: string, filters: PatientFilters = {}): Promise<PatientEntity[]> {
+    let query = `
       SELECT p.* FROM pacs_patients p
       INNER JOIN pacs_patient_doctors pd ON p.id = pd.patient_id
       WHERE pd.doctor_id = ?
-      ORDER BY p.is_priority DESC, p.created_at DESC
     `;
-    return await dbAll(query, [doctorId]);
+    const params: any[] = [doctorId];
+
+    if (filters.organisationName) {
+      query += ` AND p.organisation_name LIKE ?`;
+      params.push(`%${filters.organisationName}%`);
+    }
+    if (filters.medicineType) {
+      query += ` AND p.medicine_type = ?`;
+      params.push(filters.medicineType);
+    }
+    if (filters.medicalAid) {
+      query += ` AND p.medical_aid LIKE ?`;
+      params.push(`%${filters.medicalAid}%`);
+    }
+
+    query += ` ORDER BY p.is_priority DESC, p.created_at DESC`;
+    return await dbAll(query, params);
   }
 
-  static async getAllPatients(): Promise<PatientEntity[]> {
-    const query = `SELECT * FROM pacs_patients ORDER BY is_priority DESC, created_at DESC`;
-    return await dbAll(query);
+  static async getAllPatients(filters: PatientFilters = {}): Promise<PatientEntity[]> {
+    let query = `SELECT * FROM pacs_patients WHERE 1=1`;
+    const params: any[] = [];
+
+    if (filters.organisationName) {
+      query += ` AND organisation_name LIKE ?`;
+      params.push(`%${filters.organisationName}%`);
+    }
+    if (filters.medicineType) {
+      query += ` AND medicine_type = ?`;
+      params.push(filters.medicineType);
+    }
+    if (filters.medicalAid) {
+      query += ` AND medical_aid LIKE ?`;
+      params.push(`%${filters.medicalAid}%`);
+    }
+
+    query += ` ORDER BY is_priority DESC, created_at DESC`;
+    return await dbAll(query, params);
   }
 
   static async isDoctorAssignedToPatient(doctorId: string, patientId: string): Promise<boolean> {
