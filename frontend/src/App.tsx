@@ -10,7 +10,6 @@ import AuthView from './views/AuthView';
 import PatientSignupView from './views/PatientSignupView';
 import PractitionerSignupView from './views/PractitionerSignupView';
 import { 
-  Shield, 
   LayoutDashboard, 
   UploadCloud, 
   Database, 
@@ -21,7 +20,7 @@ import {
   MessageSquare,
   LogOut
 } from 'lucide-react';
-import { apiRequest, setToken } from './utils/api';
+import { apiRequest, setToken, getToken } from './utils/api';
 
 export default function App() {
   const [user, setUser] = useState<any>(null);
@@ -43,15 +42,12 @@ export default function App() {
   useEffect(() => {
     // Basic init check
     const checkAuth = async () => {
-      const token = localStorage.getItem('isiqalo_token');
-      if (token) {
-        setToken(token);
+      if (getToken()) {
         try {
           const res = await apiRequest('/auth/me', 'GET');
           setUser(res.user);
           setActiveTab(res.user.role === 'patient' ? 'browse' : 'dashboard');
         } catch (err) {
-          localStorage.removeItem('isiqalo_token');
           setToken(null);
         }
       }
@@ -60,7 +56,6 @@ export default function App() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('isiqalo_token');
     setToken(null);
     setUser(null);
   };

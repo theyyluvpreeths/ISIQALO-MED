@@ -6,7 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import apiRouter from './routes/api.routes';
 import { logger } from './config/logger';
-import './config/database'; // Import to initialize db tables
+import { dbInitialized } from './config/database';
 
 dotenv.config();
 
@@ -50,8 +50,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
+  .split(',').map(o => o.trim()).filter(Boolean);
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  origin: corsOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -60,9 +63,10 @@ app.use(cors({
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
-// Express request logging
+// Express request logging (signed file tokens are credentials — keep them out of logs)
 app.use((req: Request, res: Response, next: NextFunction) => {
-  logger.info(`${req.method} ${req.url} - IP: ${req.ip}`);
+  const url = req.url.replace(/^\/api\/files\/[^/?]+/, '/api/files/[redacted]');
+  logger.info(`${req.method} ${url} - IP: ${req.ip}`);
   next();
 });
 
@@ -70,10 +74,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use('/api', apiRouter);
 
 // Serve Static Frontend files in production
-const frontendBuildPath = path.join(process.cwd(), '../frontend/dist');
+const frontendBuildPath = process.env.FRONTEND_DIST_PATH || path.join(process.cwd(), '../frontend/dist');
 if (fs.existsSync(frontendBuildPath)) {
   app.use(express.static(frontendBuildPath));
-  app.get('*', (req: Request, res: Response) => {
+  // SPA fallback — but unknown /api routes must still 404 as JSON
+  app.get(/^(?!\/api(\/|$)).*/, (req: Request, res: Response) => {
     res.sendFile(path.join(frontendBuildPath, 'index.html'));
   });
   logger.info(`Serving static files from ${frontendBuildPath}`);
@@ -83,14 +88,30 @@ if (fs.existsSync(frontendBuildPath)) {
   });
 }
 
+app.use('/api', (req: Request, res: Response) => {
+  res.status(404).json({ error: 'API route not found.' });
+});
+
 // Global error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err?.type === 'entity.parse.failed' || err?.type === 'entity.too.large') {
+    res.status(err.status || 400).json({ error: 'Malformed or oversized request body.' });
+    return;
+  }
   logger.error('Unhandled server error:', err);
+  if (res.headersSent) return next(err);
   res.status(500).json({ error: 'An unexpected internal error occurred on the secure server.' });
 });
 
-app.listen(PORT, () => {
-  logger.info(`Server successfully running on port ${PORT}`);
-});
+dbInitialized
+  .then(() => {
+    app.listen(PORT, () => {
+      logger.info(`Server successfully running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    logger.error('FATAL: database failed to initialise, server not started.', err);
+    process.exit(1);
+  });
 
 export default app;

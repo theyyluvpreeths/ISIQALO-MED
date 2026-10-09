@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { apiRequest } from '../utils/api';
+import { apiRequest, getToken } from '../utils/api';
 import { Search, Database, CheckSquare, Square, AlertTriangle } from 'lucide-react';
 
 interface Patient {
@@ -88,7 +88,7 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${getToken()}`
         },
         body: JSON.stringify({
           patientIds: selectedIds,
@@ -97,7 +97,8 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to extract data');
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to extract data');
       }
 
       // Download logic
@@ -108,6 +109,7 @@ export default function ExtractView({ showToast }: ExtractViewProps) {
       a.download = `isiqalo_pacs_extract_${Date.now()}.${extractFormat.toLowerCase()}`;
       document.body.appendChild(a);
       a.click();
+      a.remove();
       window.URL.revokeObjectURL(url);
       
       showToast(`Successfully extracted ${selectedIds.length} patient records in ${extractFormat} format.`, 'success');

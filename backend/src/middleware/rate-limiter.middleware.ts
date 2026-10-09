@@ -2,11 +2,12 @@ import rateLimit from 'express-rate-limit';
 import { logger } from '../config/logger';
 
 /**
- * General API rate limiter — 100 requests per 15 minutes per IP.
+ * General API rate limiter — 1000 requests per 15 minutes per IP.
+ * (Each screen makes several calls and every image preview is a request.)
  */
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -20,11 +21,13 @@ export const generalLimiter = rateLimit({
 
 /**
  * Authentication rate limiter — 5 attempts per 15 minutes per IP.
- * Protects login and registration from brute-force attacks.
+ * Protects login and registration from brute-force attacks. Successful
+ * attempts don't count, so normal sign-ins never lock a user out.
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
+  skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
   message: {

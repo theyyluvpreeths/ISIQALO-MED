@@ -27,7 +27,6 @@ export default function AuthView({ onAuthSuccess, showToast, onNavigateSignup }:
         password,
       });
       
-      localStorage.setItem('isiqalo_token', data.token);
       setToken(data.token);
       showToast('Authentication successful!', 'success');
       onAuthSuccess(data.user);

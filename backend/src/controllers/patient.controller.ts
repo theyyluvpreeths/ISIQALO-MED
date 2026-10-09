@@ -1,15 +1,19 @@
 import { Response } from 'express';
 import crypto from 'crypto';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
-import { PatientRepository, DocumentRepository, AuditLogRepository, PatientEntity, CaseCommentRepository } from '../repositories/database.repositories';
+import { PatientRepository, DocumentRepository, AuditLogRepository, PatientEntity, CaseCommentRepository, AuthPatientLinkRepository } from '../repositories/database.repositories';
 import { encrypt, decrypt } from '../services/encryption';
 import { logSecurityEvent } from '../config/logger';
 import fs from 'fs';
-import { BlobServiceClient, BlobSASPermissions } from '@azure/storage-blob';
+import { Request } from 'express';
+import { Storage, signFileToken, verifyFileToken } from '../services/storage';
 
-const AZURE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || "UseDevelopmentStorage=true";
-const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_CONNECTION_STRING);
-const CONTAINER_NAME = 'isiqalo-pacs-files';
+const isAdmin = (role: string) => role === 'admin' || role === 'superadmin';
+
+const INLINE_MIME_TYPES: Record<string, string> = {
+  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp',
+  pdf: 'application/pdf', txt: 'text/plain; charset=utf-8',
+};
 
 export class PatientController {
   static async createPatient(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -92,28 +96,30 @@ export class PatientController {
       }
 
       const patientId = req.params.patientId || req.params.id;
-      const files = req.files as Express.Multer.File[];
+      const files = (req.files as Express.Multer.File[]) || [];
       
-      if (!files || files.length === 0) {
+      if (files.length === 0) {
         res.status(400).json({ error: 'No documents uploaded' });
+        return;
+      }
+
+      if (req.user.role === 'patient' || req.user.role === 'viewer') {
+        await PatientController.cleanupTempFiles(files);
+        res.status(403).json({ error: 'Forbidden: Only practitioners can upload documents.' });
         return;
       }
 
       const ip = req.ip || 'unknown';
       const userAgent = req.headers['user-agent'] || 'unknown';
       const now = new Date().toISOString();
-      const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
-      await containerClient.createIfNotExists();
-
       const uploadedDocIds: string[] = [];
 
       for (const file of files) {
         const docId = `doc-${crypto.randomBytes(4).toString('hex')}`;
         const fileExt = file.originalname.split('.').pop() || 'unknown';
 
-        const blockBlobClient = containerClient.getBlockBlobClient(file.filename);
-        await blockBlobClient.uploadFile(file.path);
-        await fs.promises.unlink(file.path);
+        await Storage.uploadFile(file.filename, file.path);
+        await fs.promises.unlink(file.path).catch(() => undefined);
 
         await DocumentRepository.createDocument({
           id: docId,
@@ -142,6 +148,7 @@ export class PatientController {
       res.status(201).json({ message: 'Documents uploaded successfully', docIds: uploadedDocIds });
     } catch (error) {
       console.error('Upload documents error:', error);
+      await PatientController.cleanupTempFiles((req.files as Express.Multer.File[]) || []);
       res.status(500).json({ error: 'Internal server error uploading documents.' });
     }
   }
@@ -163,33 +170,62 @@ export class PatientController {
       }
       
       const fileKey = PatientController.safeDecrypt(doc.file_path_encrypted);
-      if (!fileKey) {
+      if (!fileKey || fileKey === '[DECRYPTION_ERROR]') {
         res.status(500).json({ error: 'Failed to decrypt document path' });
         return;
       }
 
       await PatientRepository.incrementDownloads(id);
 
-      const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
-      const blockBlobClient = containerClient.getBlockBlobClient(fileKey);
-      
-      const startsOn = new Date();
-      const expiresOn = new Date(startsOn.valueOf() + 3600 * 1000); // 1 hour
-      
-      const permissions = new BlobSASPermissions();
-      permissions.read = true;
-      
-      const url = await blockBlobClient.generateSasUrl({
-        permissions,
-        startsOn,
-        expiresOn
-      });
-      
-      res.status(200).json({ url });
+      // Same-origin signed link, streamed by serveFile — works behind Docker and any proxy
+      const token = signFileToken({ docId, patientId: id, userId: req.user.id });
+      res.status(200).json({ url: `/api/files/${token}` });
     } catch (error) {
       console.error('Fetch document URL error:', error);
       res.status(500).json({ error: 'Internal server error retrieving document URL.' });
     }
+  }
+
+  static async serveFile(req: Request, res: Response): Promise<void> {
+    try {
+      const payload = verifyFileToken(req.params.token);
+      if (!payload) {
+        res.status(403).json({ error: 'This document link is invalid or has expired.' });
+        return;
+      }
+
+      const docs = await DocumentRepository.getDocumentsByPatientId(payload.patientId);
+      const doc = docs.find(d => d.id === payload.docId);
+      const fileKey = doc ? PatientController.safeDecrypt(doc.file_path_encrypted) : null;
+      if (!doc || !fileKey || fileKey === '[DECRYPTION_ERROR]' || !(await Storage.exists(fileKey))) {
+        res.status(404).json({ error: 'Document not found' });
+        return;
+      }
+
+      const ext = (doc.file_type || '').toLowerCase();
+      const inlineType = INLINE_MIME_TYPES[ext];
+      const safeName = doc.file_name.replace(/[^\w.\- ]/g, '_');
+      res.setHeader('Content-Type', inlineType || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `${inlineType ? 'inline' : 'attachment'}; filename="${safeName}"`);
+      res.setHeader('Cache-Control', 'private, no-store');
+      // Uploaded content must never execute script, even when served inline
+      res.setHeader('Content-Security-Policy', "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox");
+
+      const { stream, contentLength } = await Storage.openStream(fileKey);
+      if (contentLength !== undefined) res.setHeader('Content-Length', contentLength);
+      stream.on('error', (err) => {
+        console.error('Document stream error:', err);
+        res.destroy(err);
+      });
+      stream.pipe(res);
+    } catch (error) {
+      console.error('Serve file error:', error);
+      if (!res.headersSent) res.status(500).json({ error: 'Internal server error retrieving document.' });
+    }
+  }
+
+  private static async cleanupTempFiles(files: Express.Multer.File[]): Promise<void> {
+    await Promise.all(files.map(f => fs.promises.unlink(f.path).catch(() => undefined)));
   }
 
   private static safeDecrypt(encrypted: string | null): string | null {
@@ -240,9 +276,8 @@ export class PatientController {
       };
       
       let patients;
-      const { AuthPatientLinkRepository } = require('../repositories/database.repositories');
 
-      if (req.user.role === 'admin' || req.user.role === 'superadmin' || req.user.role === 'viewer') {
+      if (isAdmin(req.user.role) || req.user.role === 'viewer') {
         patients = await PatientRepository.getAllPatients(filters);
       } else if (req.user.role === 'patient') {
         // Patient only gets their linked cases
@@ -307,7 +342,7 @@ export class PatientController {
         return;
       }
 
-      const isAssigned = await PatientRepository.isDoctorAssignedToPatient(req.user.id, patientId);
+      const isAssigned = isAdmin(req.user.role) || await PatientRepository.isDoctorAssignedToPatient(req.user.id, patientId);
       if (!isAssigned) {
         res.status(403).json({ error: 'Forbidden' });
         return;
@@ -376,7 +411,7 @@ export class PatientController {
         return;
       }
 
-      const isAssigned = await PatientRepository.isDoctorAssignedToPatient(req.user.id, patientId);
+      const isAssigned = isAdmin(req.user.role) || await PatientRepository.isDoctorAssignedToPatient(req.user.id, patientId);
       if (!isAssigned) {
         res.status(403).json({ error: 'Forbidden' });
         return;
@@ -384,13 +419,10 @@ export class PatientController {
 
       // Fetch documents to delete from Blob Storage
       const docs = await DocumentRepository.getDocumentsByPatientId(patientId);
-      const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
-
       for (const doc of docs) {
         const fileKey = PatientController.safeDecrypt(doc.file_path_encrypted);
-        if (fileKey) {
-          const blockBlobClient = containerClient.getBlockBlobClient(fileKey);
-          await blockBlobClient.deleteIfExists();
+        if (fileKey && fileKey !== '[DECRYPTION_ERROR]') {
+          await Storage.deleteIfExists(fileKey).catch(err => console.error(`Failed to delete blob for ${doc.id}:`, err));
         }
       }
 
@@ -434,7 +466,12 @@ export class PatientController {
       const { content } = req.body;
       const doctorId = req.user?.id;
 
-      if (!doctorId || !content) {
+      if (req.user?.role === 'viewer') {
+        res.status(403).json({ error: 'Forbidden: Viewers cannot comment.' });
+        return;
+      }
+
+      if (!doctorId || typeof content !== 'string' || !content.trim()) {
         res.status(400).json({ error: 'Missing required comment fields' });
         return;
       }
@@ -446,7 +483,7 @@ export class PatientController {
         id: commentId,
         patient_id: patientId,
         doctor_id: doctorId,
-        content,
+        content: content.trim(),
         created_at: now
       });
 
@@ -464,8 +501,13 @@ export class PatientController {
         return;
       }
 
+      if (req.user.role !== 'patient') {
+        res.status(403).json({ error: 'Only patient accounts can link to patient records.' });
+        return;
+      }
+
       const { idNumber } = req.body;
-      if (!idNumber) {
+      if (!idNumber || typeof idNumber !== 'string') {
         res.status(400).json({ error: 'ID Number is required' });
         return;
       }
@@ -473,7 +515,7 @@ export class PatientController {
       const allPatients = await PatientRepository.getAllPatients();
       const matchedPatients = allPatients.filter(p => {
         const decId = PatientController.safeDecrypt(p.id_number_encrypted);
-        return decId === idNumber;
+        return decId === idNumber.trim();
       });
 
       if (matchedPatients.length === 0) {
@@ -481,7 +523,6 @@ export class PatientController {
         return;
       }
 
-      const { AuthPatientLinkRepository } = require('../repositories/database.repositories');
       for (const p of matchedPatients) {
         await AuthPatientLinkRepository.linkPatient(req.user.id, p.id);
       }

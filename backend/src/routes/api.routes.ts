@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
@@ -29,7 +29,7 @@ const upload = multer({
     },
     filename: function (req, file, cb) {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+      cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname).toLowerCase());
     }
   }),
   limits: {
@@ -37,7 +37,7 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     // Accept STL, DCM, XRAY, PDF, TXT, and images for medical attachment records
-    const allowedTypes = /stl|dcm|xray|pdf|txt|png|jpeg|jpg|webp/;
+    const allowedTypes = /^\.(stl|dcm|xray|pdf|txt|png|jpeg|jpg|webp)$/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
     
     // Some formats don't have standard mimetypes easily matched, so rely mostly on extension for the heavy types, but ideally check both.
@@ -48,6 +48,20 @@ const upload = multer({
     }
   }
 });
+
+// Signed, short-lived document links (token is the credential — see services/storage.ts)
+router.get('/files/:token', PatientController.serveFile as any);
+
+// Wrap multer so rejected files / size limits return a 400 instead of a generic 500
+function uploadFiles(req: Request, res: Response, next: NextFunction) {
+  upload.array('files', 10)(req, res, (err: any) => {
+    if (err) {
+      res.status(400).json({ error: err.message || 'File upload rejected.' });
+      return;
+    }
+    next();
+  });
+}
 
 // Authentication routes
 router.post('/auth/login', authLimiter, AuthController.login as any);
@@ -64,7 +78,7 @@ router.post('/patients/link', authenticateJWT as any, PatientController.linkPati
 router.get('/patients/:id', authenticateJWT as any, authorizePatientAccess as any, PatientController.getPatientById as any);
 router.put('/patients/:id', authenticateJWT as any, authorizePatientAccess as any, PatientController.updatePatient as any);
 router.delete('/patients/:id', authenticateJWT as any, authorizePatientAccess as any, PatientController.deletePatient as any);
-router.post('/patients/:id/documents', authenticateJWT as any, authorizePatientAccess as any, upload.array('files', 10), PatientController.uploadDocument as any);
+router.post('/patients/:id/documents', authenticateJWT as any, authorizePatientAccess as any, uploadFiles, PatientController.uploadDocument as any);
 router.get('/patients/:id/documents/:docId/url', authenticateJWT as any, authorizePatientAccess as any, PatientController.getDocumentUrl as any);
 router.get('/patients/:id/comments', authenticateJWT as any, authorizePatientAccess as any, PatientController.getComments as any);
 router.post('/patients/:id/comments', authenticateJWT as any, authorizePatientAccess as any, PatientController.addComment as any);

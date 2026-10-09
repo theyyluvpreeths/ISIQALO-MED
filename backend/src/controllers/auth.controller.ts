@@ -4,9 +4,9 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { UserRepository, AuditLogRepository, UserEntity } from '../repositories/database.repositories';
 import { logSecurityEvent } from '../config/logger';
+import { JWT_SECRET, JWT_EXPIRES_IN } from '../config/secrets';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'isiqalo-med-jwt-secret-key-for-local-dev';
-const JWT_EXPIRES_IN = '1h';
+const DUMMY_HASH = bcrypt.hashSync('isiqalo-timing-equaliser', 10);
 
 export class AuthController {
   static async login(req: Request, res: Response): Promise<void> {
@@ -19,6 +19,8 @@ export class AuthController {
 
       const user = await UserRepository.getUserByEmail(email.toLowerCase());
       if (!user) {
+        // Compare against a dummy hash so response time doesn't reveal which emails exist
+        await bcrypt.compare(password, DUMMY_HASH);
         res.status(401).json({ error: 'Invalid email or password' });
         return;
       }
@@ -31,7 +33,7 @@ export class AuthController {
 
       // Generate JWT token
       const token = jwt.sign(
-        { id: user.id, email: user.email, role: user.role },
+        { id: user.id, email: user.email, role: user.role, subscriptionPlan: user.subscription_plan },
         JWT_SECRET,
         { expiresIn: JWT_EXPIRES_IN }
       );
@@ -76,6 +78,10 @@ export class AuthController {
       const { email, password, firstName, middleName, lastName, dob, medicalNumber } = req.body;
       if (!email || !password || !firstName || !lastName || !dob || !medicalNumber) {
         res.status(400).json({ error: 'Missing required patient fields.' });
+        return;
+      }
+      if (typeof password !== 'string' || password.length < 8) {
+        res.status(400).json({ error: 'Password must be at least 8 characters long.' });
         return;
       }
 
@@ -136,6 +142,11 @@ export class AuthController {
         res.status(400).json({ error: 'Missing required practitioner fields.' });
         return;
       }
+      if (typeof password !== 'string' || password.length < 8) {
+        res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+        return;
+      }
+      const plan = ['starter', 'professional', 'enterprise'].includes(packageChoice) ? packageChoice : 'starter';
 
       const existingUser = await UserRepository.getUserByEmail(email.toLowerCase());
       if (existingUser) {
@@ -161,7 +172,7 @@ export class AuthController {
         speciality: speciality || '',
         practice_name: practiceName || '',
         practice_number: practiceNumber || '',
-        subscription_plan: packageChoice || 'starter',
+        subscription_plan: plan,
         subscription_status: 'active',
         created_at: now,
         updated_at: now

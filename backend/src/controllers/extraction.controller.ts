@@ -5,12 +5,24 @@ import { PatientRepository, ExtractionRepository, AuditLogRepository, DocumentRe
 import { decrypt } from '../services/encryption';
 import { logSecurityEvent } from '../config/logger';
 import PDFDocument from 'pdfkit';
-import { BlobServiceClient } from '@azure/storage-blob';
-const archiver = require('archiver');
+import { Storage } from '../services/storage';
+import { ZipArchive } from 'archiver';
 
-const AZURE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || "UseDevelopmentStorage=true";
-const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_CONNECTION_STRING);
-const CONTAINER_NAME = 'isiqalo-pacs-files';
+// Quote a CSV cell and neutralise spreadsheet formula injection (=, +, -, @, tab, CR)
+function csvCell(value: unknown): string {
+  let s = value === null || value === undefined ? '' : String(value);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  return `"${s.replace(/"/g, '""')}"`;
+}
+
+function safeDecrypt(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    return decrypt(value);
+  } catch {
+    return '[DECRYPTION_ERROR]';
+  }
+}
 
 export class ExtractionController {
   static async extractCases(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -21,12 +33,12 @@ export class ExtractionController {
       }
 
       const { patientIds, format } = req.body;
-      if (!Array.isArray(patientIds) || patientIds.length === 0) {
+      if (!Array.isArray(patientIds) || patientIds.length === 0 || !patientIds.every(id => typeof id === 'string')) {
         res.status(400).json({ error: 'Please select at least one patient to perform data extraction.' });
         return;
       }
 
-      const targetFormat = (format || 'JSON').toUpperCase();
+      const targetFormat = String(format || 'JSON').toUpperCase();
       if (!['JSON', 'CSV', 'PDF', 'ZIP'].includes(targetFormat)) {
         res.status(400).json({ error: 'Invalid extraction format. Supported formats: JSON, CSV, PDF, ZIP.' });
         return;
@@ -38,7 +50,7 @@ export class ExtractionController {
 
       const extractedData: any[] = [];
 
-      for (const id of patientIds) {
+      for (const id of new Set<string>(patientIds)) {
         const p = await PatientRepository.getPatientById(id);
         
         // RBAC Check for extraction: Ensure doctor is assigned or is admin
@@ -58,8 +70,8 @@ export class ExtractionController {
             isPriority: p.is_priority === 1,
             sufferingFrom: p.suffering_from,
             treatmentName: p.treatment_name,
-            treatmentNotes: p.treatment_notes_encrypted ? decrypt(p.treatment_notes_encrypted) : null,
-            existingInfo: p.existing_info_encrypted ? decrypt(p.existing_info_encrypted) : null,
+            treatmentNotes: safeDecrypt(p.treatment_notes_encrypted),
+            existingInfo: safeDecrypt(p.existing_info_encrypted),
             createdAt: p.created_at,
             documents: docs.map(d => ({ name: d.file_name, type: d.file_type, encryptedPath: d.file_path_encrypted }))
           });
@@ -82,6 +94,15 @@ export class ExtractionController {
         created_at: now
       });
 
+      await ExtractionRepository.recordExtraction({
+        id: crypto.randomUUID(),
+        user_id: req.user.id,
+        patient_ids: JSON.stringify(extractedData.map(p => p.id)),
+        format: targetFormat,
+        record_count: extractedData.length,
+        extracted_at: now
+      });
+
       logSecurityEvent(req.user.id, 'DATA_EXTRACTION', `Extracted ${extractedData.length} patient records in ${targetFormat} format.`, ip, userAgent);
 
       // Generate the payload based on format
@@ -90,7 +111,10 @@ export class ExtractionController {
       let fileName = `isiqalo_pacs_extract_${Date.now()}`;
 
       if (targetFormat === 'JSON') {
-        payload = JSON.stringify(extractedData, null, 2);
+        payload = JSON.stringify(extractedData.map(p => ({
+          ...p,
+          documents: p.documents.map((d: any) => ({ name: d.name, type: d.type }))
+        })), null, 2);
         contentType = 'application/json';
         fileName += '.json';
         const buffer = Buffer.from(payload);
@@ -99,9 +123,10 @@ export class ExtractionController {
         res.status(200).send(buffer);
       } else if (targetFormat === 'CSV') {
         const headers = 'Patient ID,Organisation,Facility Type,Medicine Category,Priority,Suffering From,Treatment Name,Documents Count,Date Created\n';
-        const rows = extractedData.map(p => 
-          `"${p.id}","${p.organisationName?.replace(/"/g, '""')}","${p.facilityType}","${p.medicineType}","${p.isPriority}","${p.sufferingFrom?.replace(/"/g, '""')}","${p.treatmentName?.replace(/"/g, '""')}","${p.documents.length}","${p.createdAt}"`
-        ).join('\n');
+        const rows = extractedData.map(p => [
+          p.id, p.organisationName, p.facilityType, p.medicineType, p.isPriority,
+          p.sufferingFrom, p.treatmentName, p.documents.length, p.createdAt
+        ].map(csvCell).join(',')).join('\n');
         payload = headers + rows;
         contentType = 'text/csv';
         fileName += '.csv';
@@ -128,27 +153,24 @@ export class ExtractionController {
         doc.fontSize(20).text('ISIQALO MED - Patient Extraction Report', { align: 'center' });
         doc.moveDown(2);
 
-        const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
-
         let first = true;
         for (const p of extractedData) {
           if (!first) {
             doc.addPage();
           }
           first = false;
-          await ExtractionController.appendPatientContentToPdf(p, doc, containerClient);
+          await ExtractionController.appendPatientContentToPdf(p, doc);
         }
 
         doc.end();
         await pdfPromise;
-        return; // Response handled in 'end' event
         return; // Response handled in 'end' event
       } else {
         // ZIP extraction
         res.setHeader('Content-Type', 'application/zip');
         res.setHeader('Content-Disposition', `attachment; filename=${fileName}.zip`);
 
-        const archive = archiver('zip', { zlib: { level: 9 } });
+        const archive = new ZipArchive({ zlib: { level: 9 } });
         
         archive.on('error', (err: any) => {
           console.error('Archiver error:', err);
@@ -156,8 +178,6 @@ export class ExtractionController {
         });
 
         archive.pipe(res);
-
-        const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
 
         for (const p of extractedData) {
           const folderName = `patient_${p.id}`;
@@ -178,7 +198,7 @@ export class ExtractionController {
           doc.fontSize(20).text('ISIQALO MED - Patient Clinical Report', { align: 'center' });
           doc.moveDown(2);
           
-          await ExtractionController.appendPatientContentToPdf(p, doc, containerClient);
+          await ExtractionController.appendPatientContentToPdf(p, doc);
           
           doc.end();
 
@@ -189,13 +209,10 @@ export class ExtractionController {
             try {
               if (!d.encryptedPath) continue;
               const decryptedKey = decrypt(d.encryptedPath);
-              const blockBlobClient = containerClient.getBlockBlobClient(decryptedKey);
-              
-              if (await blockBlobClient.exists()) {
-                const downloadResponse = await blockBlobClient.download(0);
-                if (downloadResponse.readableStreamBody) {
-                  archive.append(downloadResponse.readableStreamBody as any, { name: `${folderName}/raw_files/${d.name}` });
-                }
+              if (await Storage.exists(decryptedKey)) {
+                const { stream } = await Storage.openStream(decryptedKey);
+                const safeName = String(d.name).replace(/[\\/:*?"<>|]/g, '_');
+                archive.append(stream, { name: `${folderName}/raw_files/${safeName}` });
               }
             } catch (err) {
               console.error(`Failed to append file ${d.name} for patient ${p.id}`, err);
@@ -208,6 +225,10 @@ export class ExtractionController {
       }
     } catch (error) {
       console.error('Extraction error:', error);
+      if (res.headersSent) {
+        res.destroy();
+        return;
+      }
       res.status(500).json({ error: 'Internal server error performing data extraction.' });
     }
   }
@@ -227,7 +248,7 @@ export class ExtractionController {
     }
   }
 
-  private static async appendPatientContentToPdf(p: any, doc: typeof PDFDocument, containerClient: any) {
+  private static async appendPatientContentToPdf(p: any, doc: PDFKit.PDFDocument) {
     doc.fontSize(16).text(`Patient ID: ${p.id}`, { underline: true });
     doc.fontSize(12).text(`Organisation: ${p.organisationName}`);
     doc.text(`Condition: ${p.sufferingFrom}`);
@@ -244,9 +265,8 @@ export class ExtractionController {
           try {
             if (!d.encryptedPath) continue;
             const decryptedKey = decrypt(d.encryptedPath);
-            const blockBlobClient = containerClient.getBlockBlobClient(decryptedKey);
-            if (await blockBlobClient.exists()) {
-               const buffer = await blockBlobClient.downloadToBuffer();
+            if (await Storage.exists(decryptedKey)) {
+               const buffer = await Storage.downloadToBuffer(decryptedKey);
                doc.addPage();
                doc.fontSize(14).text(`Attached Image: ${d.name}`, { underline: true });
                doc.moveDown();
