@@ -1,21 +1,35 @@
 const API_BASE_URL = '/api';
 
 const REQUEST_TIMEOUT_MS = 30000; // 30 second timeout
+const UPLOAD_TIMEOUT_MS = 30 * 60 * 1000; // large STL/DCM uploads can take a while
 
-export const setToken = (token: string) => {
-  localStorage.setItem('token', token);
+export const TOKEN_STORAGE_KEY = 'isiqalo_token';
+
+export const setToken = (token: string | null) => {
+  if (token) {
+    localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+  }
 };
 
+export const getToken = (): string | null => localStorage.getItem(TOKEN_STORAGE_KEY);
+
 export async function apiRequest(endpoint: string, method: string = 'GET', body: any = null, isMultipart: boolean = false) {
-  const headers: HeadersInit = {};
+  const headers: Record<string, string> = {};
 
   if (!isMultipart) {
     headers['Content-Type'] = 'application/json';
   }
 
+  const token = getToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   // Create an AbortController for request timeout
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), isMultipart ? UPLOAD_TIMEOUT_MS : REQUEST_TIMEOUT_MS);
 
   const config: RequestInit = {
     method,
@@ -43,7 +57,10 @@ export async function apiRequest(endpoint: string, method: string = 'GET', body:
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'API request failed');
+      const detail = Array.isArray(errorData.details) && errorData.details.length > 0
+        ? `: ${errorData.details.map((d: any) => d.message).join(', ')}`
+        : '';
+      throw new Error((errorData.error || 'API request failed') + detail);
     }
 
     // Handle file downloads

@@ -56,8 +56,13 @@ export class ChatController {
       const receiverId = req.params.userId;
       const { content } = req.body;
 
-      if (!content || !content.trim()) {
+      if (typeof content !== 'string' || !content.trim()) {
         res.status(400).json({ error: 'Message content is required' });
+        return;
+      }
+
+      if (receiverId === req.user.id || !(await ChatRepository.userExists(receiverId))) {
+        res.status(400).json({ error: 'Invalid message recipient.' });
         return;
       }
 

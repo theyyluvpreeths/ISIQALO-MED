@@ -26,3 +26,8 @@ uploads/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Uploaded files awaiting transfer to blob storage
+backend/temp/
+*.sqlite
+*.sqlite-*

@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { logger } from '../config/logger';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'isiqalo-med-jwt-secret-key-for-local-dev';
+import { JWT_SECRET } from '../config/secrets';
 
 // Extend Express Request type to include user information
 export interface AuthenticatedRequest extends Request {
@@ -31,8 +30,14 @@ export function authenticateJWT(req: AuthenticatedRequest, res: Response, next: 
       email: string;
       role: string;
       subscriptionPlan: string;
+      purpose?: string;
     };
-    req.user = decoded;
+    // Signed file links share the secret but must never act as a session token
+    if (decoded.purpose) {
+      res.status(403).json({ error: 'Invalid or expired token.' });
+      return;
+    }
+    req.user = { id: decoded.id, email: decoded.email, role: decoded.role, subscriptionPlan: decoded.subscriptionPlan };
     next();
   } catch (error) {
     logger.warn('Authentication failed: Invalid or expired token', { error });

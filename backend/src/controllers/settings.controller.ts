@@ -59,7 +59,7 @@ export class SettingsController {
       }
 
       let logs;
-      if (req.user.role === 'admin') {
+      if (req.user.role === 'admin' || req.user.role === 'superadmin') {
         logs = await AuditLogRepository.getAllAuditLogs();
       } else {
         logs = await AuditLogRepository.getAuditLogsByUserId(req.user.id);

@@ -1,0 +1,40 @@
+# Hot-reload development inside Docker — no node_modules needed on the host.
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# Frontend: http://localhost:5173   API: http://localhost:5000
+# Source folders are bind-mounted; dependencies live in named volumes.
+# Polling is enabled because file-change events don't cross from Windows into Docker.
+
+services:
+  app:
+    build: !reset null
+    image: node:22-bookworm-slim
+    working_dir: /app/backend
+    command: sh -c "npm install && npx nodemon --legacy-watch --exec ts-node src/app.ts"
+    environment:
+      NODE_ENV: development
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+    volumes:
+      - ./backend:/app/backend
+      - backend_node_modules:/app/backend/node_modules
+      - app_data:/app/backend/data
+      - app_logs:/app/backend/logs
+
+  frontend:
+    image: node:22-bookworm-slim
+    container_name: isiqalo_frontend
+    working_dir: /app/frontend
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - app
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_PROXY_TARGET: http://app:5000
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend:/app/frontend
+      - frontend_node_modules:/app/frontend/node_modules
+
+volumes:
+  backend_node_modules:
+  frontend_node_modules:

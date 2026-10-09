@@ -1,4 +1,4 @@
-import { dbRun, dbGet, dbAll } from '../config/database';
+import { dbRun, dbGet, dbAll, dbTransaction } from '../config/database';
 
 export interface UserEntity {
   id: string;
@@ -56,9 +56,10 @@ export interface PatientDocumentEntity {
 
 export interface ExtractionEntity {
   id: string;
-  patient_id: string;
   user_id: string;
+  patient_ids: string; // JSON array
   format: string;
+  record_count: number;
   extracted_at: string;
 }
 
@@ -174,8 +175,7 @@ export interface PatientFilters {
 
 export class PatientRepository {
   static async createPatient(patient: PatientEntity, doctorId: string): Promise<void> {
-    await dbRun('BEGIN TRANSACTION');
-    try {
+    await dbTransaction(async () => {
       const query = `
         INSERT INTO pacs_patients (
           id, organisation_name, facility_type, medicine_type, is_priority, suffering_from, treatment_name,
@@ -198,12 +198,7 @@ export class PatientRepository {
         doctorId,
         patient.created_at
       ]);
-
-      await dbRun('COMMIT');
-    } catch (error) {
-      await dbRun('ROLLBACK');
-      throw error;
-    }
+    });
   }
 
   static async getPatientById(id: string): Promise<PatientEntity | null> {
@@ -303,9 +298,25 @@ export class DocumentRepository {
 }
 
 export class ExtractionRepository {
+  static async recordExtraction(extraction: ExtractionEntity): Promise<void> {
+    await dbRun(
+      `INSERT INTO pacs_extractions (id, user_id, patient_ids, format, record_count, extracted_at) VALUES (?, ?, ?, ?, ?, ?)`,
+      [extraction.id, extraction.user_id, extraction.patient_ids, extraction.format, extraction.record_count, extraction.extracted_at]
+    );
+  }
+
   static async getExtractionsByUserId(userId: string): Promise<any[]> {
-    // Left as stub since extraction functionality will need total rewrite
-    return [];
+    const rows: ExtractionEntity[] = await dbAll(
+      'SELECT * FROM pacs_extractions WHERE user_id = ? ORDER BY extracted_at DESC LIMIT 100',
+      [userId]
+    );
+    return rows.map(r => ({
+      id: r.id,
+      patientIds: JSON.parse(r.patient_ids),
+      format: r.format,
+      recordCount: r.record_count,
+      extractedAt: r.extracted_at
+    }));
   }
 }
 
@@ -363,6 +374,10 @@ export class ChatRepository {
       ORDER BY m.created_at ASC
     `;
     return await dbAll(query, [user1Id, user2Id, user2Id, user1Id]);
+  }
+
+  static async userExists(id: string): Promise<boolean> {
+    return !!(await dbGet('SELECT 1 FROM auth_users WHERE id = ?', [id]));
   }
 
   static async getAllUsersForChat(): Promise<any[]> {
